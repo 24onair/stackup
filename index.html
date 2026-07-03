@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!--
+  CHROMA STACK — 팬톤 컬러칩 물리 스태킹 프로토타입
+  실행: 이 폴더에서 `python3 -m http.server 8765` 후 http://localhost:8765 접속
+  (ES 모듈을 사용하므로 file:// 직접 열기는 동작하지 않음)
+  디버그: ?noads 파라미터로 광고 스텁 비활성화
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>CHROMA STACK</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    background: #101014;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body { display: flex; align-items: center; justify-content: center; }
+  #wrap { position: relative; }
+  #game { display: block; touch-action: none; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center;
+    background: rgba(16, 16, 20, 0.35);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .overlay h1 { font-size: 46px; font-weight: 800; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
+  .overlay .sub { font-size: 15px; color: rgba(255,255,255,.85); letter-spacing: 1px; }
+  .overlay .stat { font-size: 17px; color: rgba(255,255,255,.9); min-height: 22px; }
+  .overlay .big { font-size: 64px; font-weight: 800; color: #fff; line-height: 1.1; }
+
+  button {
+    font: inherit; font-weight: 700; font-size: 19px;
+    padding: 15px 44px; border: none; border-radius: 999px;
+    cursor: pointer; letter-spacing: 1px;
+    color: #1c1c22; background: #fff;
+    box-shadow: 0 6px 22px rgba(0,0,0,.25);
+    transition: transform .08s;
+  }
+  button:active { transform: scale(.95); }
+  #btnContinue { background: #E8B93E; }
+
+  #btnSound {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    width: 44px; height: 44px; padding: 0;
+    font-size: 20px; line-height: 44px;
+    background: rgba(255,255,255,.35); box-shadow: none;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* 광고 스텁 오버레이 (ads.js가 body에 생성) */
+  #adOverlay {
+    position: fixed; inset: 0; z-index: 50;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(10, 10, 12, 0.92);
+  }
+  #adOverlay .ad-box { width: 300px; text-align: center; color: #fff; }
+  #adOverlay .ad-label {
+    display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 2px;
+    border: 1px solid rgba(255,255,255,.5); border-radius: 4px;
+    padding: 3px 10px; margin-bottom: 16px; color: rgba(255,255,255,.7);
+  }
+  #adOverlay .ad-text { font-size: 17px; margin-bottom: 18px; letter-spacing: 1px; }
+  #adOverlay .ad-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; }
+  #adOverlay .ad-bar-fill { height: 100%; width: 0; background: #E8B93E; }
+</style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game"></canvas>
+    <button id="btnSound" aria-label="배경음악 켜기/끄기">🔊</button>
+
+    <div id="title" class="overlay">
+      <h1>CHROMA STACK</h1>
+      <div class="sub">한 번의 탭으로 컬러칩을 쌓아 올리세요</div>
+      <div id="titleBest" class="stat"></div>
+      <div id="titleStreak" class="stat"></div>
+      <button id="btnStart">시작하기</button>
+    </div>
+
+    <div id="result" class="overlay">
+      <div id="resultReason" class="sub"></div>
+      <div id="resultScore" class="big">0</div>
+      <div id="resultHeight" class="stat"></div>
+      <div id="resultBest" class="stat"></div>
+      <button id="btnContinue">📺 광고 보고 이어하기</button>
+      <button id="btnRestart">다시하기</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
