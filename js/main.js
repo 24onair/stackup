@@ -809,7 +809,7 @@ btnSound?.addEventListener('click', () => {
 });
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-05a'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-05b'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 stageName = stageById(Storage.data.stage).name;

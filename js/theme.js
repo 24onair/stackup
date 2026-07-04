@@ -27,8 +27,9 @@ export const T = {
 
 // 스테이지(도시) — 배경 픽셀 스트립 6종. 성층권 구간은 전 도시 공통. 기본 서울.
 export const STAGES = [
-  { id: 'seoul',   name: '서울',   en: 'SEOUL' },
-  { id: 'tokyo',   name: '도쿄',   en: 'TOKYO' },
+  { id: 'seoul',      name: '서울',     en: 'SEOUL' },
+  { id: 'queenstown', name: '퀸즈타운', en: 'QUEENSTOWN' },
+  { id: 'tokyo',      name: '도쿄',     en: 'TOKYO' },
   { id: 'paris',   name: '파리',   en: 'PARIS' },
   { id: 'london',  name: '런던',   en: 'LONDON' },
   { id: 'newyork', name: '뉴욕',   en: 'NEW YORK' },
