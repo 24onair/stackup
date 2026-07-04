@@ -679,16 +679,22 @@ function render(nowMs) {
 }
 
 // ─── 메인 루프 (고정 60fps 스텝 + 어큐뮬레이터) ──────────
+// 예외 1회로 rAF 체인이 끊겨 게임이 영구 정지하지 않도록 — 프레임 스킵으로 강등
 let last = performance.now(), acc = 0;
 function frame(now) {
-  const rawDt = Math.min(now - last, 100);
-  last = now;
-  acc += rawDt;
-  while (acc >= P.STEP_MS) {
-    tick(P.STEP_MS);
-    acc -= P.STEP_MS;
+  try {
+    const rawDt = Math.min(now - last, 100);
+    last = now;
+    acc += rawDt;
+    while (acc >= P.STEP_MS) {
+      tick(P.STEP_MS);
+      acc -= P.STEP_MS;
+    }
+    render(now);
+  } catch (err) {
+    console.error('CHIP!CHIP! frame error (프레임 스킵):', err);
+    acc = 0; // 예외 프레임의 잔여 스텝 폐기
   }
-  render(now);
   requestAnimationFrame(frame);
 }
 
@@ -706,10 +712,14 @@ function tick(stepMs) {
 }
 
 // ─── 입력 ────────────────────────────────────────────────
-canvas.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  audio();
-  drop();
+// 가이드: 터치 영역 = 화면 전체. window 레벨로 받아 캔버스 위 요소 간섭에도 안전.
+// 버튼/입력은 제외(고유 핸들러 우선), 오디오 예외가 드롭을 막지 못하게 격리.
+window.addEventListener('pointerdown', (e) => {
+  const t = e.target;
+  if (t && t.closest && t.closest('button, input, a')) return;
+  if (t === canvas) e.preventDefault();
+  try { audio(); } catch { /* 오디오 실패 무시 */ }
+  drop(); // state !== 'AIM'이면 내부에서 no-op
 }, { passive: false });
 
 // ─── 랭킹보드 ────────────────────────────────────────────
@@ -724,21 +734,22 @@ async function openBoard(range = boardRange) {
 }
 
 function initBoardUI() {
+  // getElementById null 방어 — 배포 직후 10분 캐시 창에서 옛/새 HTML·JS 조합이 만나도 부팅 유지
   const btnBoard = document.getElementById('btnBoard');
   const btnBoardTitle = document.getElementById('btnBoardTitle');
   if (!Leaderboard.enabled) { // 키 미설정 → 랭킹 UI 전체 숨김
-    btnBoard.style.display = 'none';
-    btnBoardTitle.style.display = 'none';
+    if (btnBoard) btnBoard.style.display = 'none';
+    if (btnBoardTitle) btnBoardTitle.style.display = 'none';
     return;
   }
-  btnBoard.addEventListener('click', () => wipe(() => openBoard()));
-  btnBoardTitle.addEventListener('click', () => wipe(() => openBoard()));
-  document.getElementById('btnBoardClose').addEventListener('click', () => wipe(hideBoard));
+  if (btnBoard) btnBoard.addEventListener('click', () => wipe(() => openBoard()));
+  if (btnBoardTitle) btnBoardTitle.addEventListener('click', () => wipe(() => openBoard()));
+  document.getElementById('btnBoardClose')?.addEventListener('click', () => wipe(hideBoard));
   document.querySelectorAll('#boardTabs .tab').forEach((b) =>
     b.addEventListener('click', () => openBoard(b.dataset.range)));
 
   // 닉네임 1회 등록 → 방금 끝난 판 점수도 즉시 제출
-  document.getElementById('btnNickSave').addEventListener('click', () => {
+  document.getElementById('btnNickSave')?.addEventListener('click', () => {
     const nick = document.getElementById('nickInput').value.trim();
     if (nick.length < 2 || nick.length > 12) { document.getElementById('nickInput').placeholder = '2~12자로 입력하세요'; return; }
     Storage.data.nickname = nick;
@@ -750,14 +761,16 @@ function initBoardUI() {
 
 // ─── BGM 음소거 토글 ─────────────────────────────────────
 const btnSound = document.getElementById('btnSound');
-function syncSoundBtn() { btnSound.textContent = Bgm.enabled ? '🔊' : '🔇'; }
-btnSound.addEventListener('click', () => {
+function syncSoundBtn() { if (btnSound) btnSound.textContent = Bgm.enabled ? '🔊' : '🔇'; }
+btnSound?.addEventListener('click', () => {
   audio(); // 첫 클릭이 이 버튼일 수도 있으므로 컨텍스트 보장
   Bgm.setEnabled(!Bgm.enabled);
   syncSoundBtn();
 });
 
 // ─── 부팅 ────────────────────────────────────────────────
+const BUILD = 'chipchip-2026-07-04c'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 syncSoundBtn();
 initBoardUI();

@@ -38,10 +38,12 @@ export const Storage = {
 const $ = (id) => document.getElementById(id);
 
 export function initOverlays({ onStart, onRestart, onHome, onShare }) {
-  $('btnStart').addEventListener('click', onStart);
-  $('btnRestart').addEventListener('click', onRestart);
-  $('btnHome').addEventListener('click', onHome);
-  $('btnShare').addEventListener('click', onShare);
+  // null 방어 — 배포 직후 캐시 혼합(옛 HTML + 새 JS)에서도 부팅이 죽지 않게
+  const on = (id, fn) => { const el = $(id); if (el && fn) el.addEventListener('click', fn); };
+  on('btnStart', onStart);
+  on('btnRestart', onRestart);
+  on('btnHome', onHome);
+  on('btnShare', onShare);
 }
 
 export function showTitle() {
