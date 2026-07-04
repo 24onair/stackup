@@ -732,7 +732,10 @@ async function openBoard(range = boardRange) {
   showBoard();
   renderBoardMessage('불러오는 중…');
   const rows = await Leaderboard.fetchTop(range);
-  renderBoard(rows, Storage.data.nickname);
+  const d = Storage.data;
+  // 탑100 밖 폴백은 올타임 기록만 신뢰 가능하므로 전체 탭에서만
+  const myFallback = range === 'all' && d.bestScore > 0 ? { score: d.bestScore, height: d.bestHeight } : null;
+  renderBoard(rows, d.nickname, myFallback);
 }
 
 function initBoardUI() {
@@ -771,7 +774,7 @@ btnSound?.addEventListener('click', () => {
 });
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-04f'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-04g'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 syncSoundBtn();

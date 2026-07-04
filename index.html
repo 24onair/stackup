@@ -176,6 +176,13 @@
   #myRow .board-row { border: 3px solid #E4572E; box-shadow: 4px 4px 0 #33261A; padding: 12px 14px; }
   #myRow .rank { color: #E4572E; }
   #myRow:empty { display: none; }
+  /* 내 순위 행 착지 스쿼시 — 랭킹 진입 시 재생 (가이드) */
+  #myRow .board-row { animation: rowLand 0.35s cubic-bezier(.3,1.2,.5,1); }
+  @keyframes rowLand {
+    0%   { transform: translateY(-16px) scale(1.04, 0.82); }
+    60%  { transform: translateY(0)     scale(0.98, 1.06); }
+    100% { transform: none; }
+  }
 
   /* ── 화면 전환: 5색 칩 띠 와이프 (아래→위) ── */
   #wipe {

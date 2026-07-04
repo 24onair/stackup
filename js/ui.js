@@ -132,8 +132,9 @@ function boardRowEl(rank, r, my = false) {
   return row;
 }
 
-/** rows: [{nickname, score, height}] — 포디움(1–3위 칩 타워) + 리스트(4위~) + 내 순위 고정 */
-export function renderBoard(rows, myNickname) {
+/** rows: [{nickname, score, height}] — 포디움(1–3위 칩 타워) + 리스트(4위~) + 내 순위 고정.
+ *  myFallback: 탑100 밖일 때 하단 고정에 쓸 {score, height} (전체 탭 한정, 순위 '100+') */
+export function renderBoard(rows, myNickname, myFallback = null) {
   const podium = $('podium'), list = $('boardList'), myRow = $('myRow');
   podium.textContent = ''; list.textContent = ''; myRow.textContent = '';
   if (!rows || rows.length === 0) { renderBoardMessage(rows ? '아직 기록이 없습니다' : '랭킹을 불러오지 못했습니다'); return; }
@@ -172,10 +173,11 @@ export function renderBoard(rows, myNickname) {
   // 4위 이하 리스트
   rows.slice(3).forEach((r, i) => list.appendChild(boardRowEl(i + 4, r)));
 
-  // 내 순위 — 하단 고정 (리스트에 있으면 순위째로, 없으면 숨김)
+  // 내 순위 — 하단 고정 (가이드: 항상 하단 sticky). 탑100 밖이면 '100+' 표기
   if (myNickname) {
     const idx = rows.findIndex((r) => r.nickname === myNickname);
     if (idx >= 0) myRow.appendChild(boardRowEl(idx + 1, rows[idx], true));
+    else if (myFallback) myRow.appendChild(boardRowEl('100+', { nickname: myNickname, ...myFallback }, true));
   }
 }
 
