@@ -55,14 +55,18 @@ export function zoneIndex(heightChips) {
 /** 캔버스 렌더 전 폰트 프리로드 — ctx.font는 로드를 트리거하지 않으므로 명시 호출 필수.
  *  CDN 실패 시 2.5초 후 폴백 스택으로 진행. */
 export function loadFonts() {
-  const wants = [
-    '16px "Rammetto One"',
-    '16px "Jua"',
-    '500 16px "IBM Plex Mono"',
-    '700 16px "IBM Plex Sans KR"',
-  ];
-  return Promise.race([
-    Promise.allSettled(wants.map((f) => document.fonts.load(f))),
-    new Promise((r) => setTimeout(r, 2500)),
-  ]);
+  try {
+    const wants = [
+      '16px "Rammetto One"',
+      '16px "Jua"',
+      '500 16px "IBM Plex Mono"',
+      '700 16px "IBM Plex Sans KR"',
+    ];
+    return Promise.race([
+      Promise.allSettled(wants.map((f) => document.fonts.load(f))),
+      new Promise((r) => setTimeout(r, 2500)),
+    ]);
+  } catch {
+    return Promise.resolve(); // document.fonts 미지원 — 폴백 스택으로 진행
+  }
 }

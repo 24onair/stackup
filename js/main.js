@@ -781,8 +781,11 @@ syncSoundBtn();
 initBoardUI();
 Bg.onZoneUp = () => Sfx.zoneUp(); // 존 전환 토스트와 동기된 상승 글리산도
 showTitle();
-// 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 실패 시 2.5s 후 폴백 진행
-loadFonts().finally(() => requestAnimationFrame(frame));
+// 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 병렬 로드.
+// 주의: 루프 시작을 폰트에 블로킹하면 느린 네트워크에서 게임이 수 초간 멈춰
+// "클릭해도 칩이 안 떨어지는" 버그가 됨. 매 프레임 재렌더라 늦게 로드돼도 자동 반영.
+loadFonts();
+requestAnimationFrame(frame);
 
 // QA/디버그 훅
 window.__CHROMA = {
