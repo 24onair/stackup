@@ -4,7 +4,7 @@
 // ─── 물리 튜닝 상수 (모두 시작값 — 여기서 조정) ─────────────
 export const P = {
   W: 750, H: 1334,            // 논리 캔버스
-  CHIP: 80,                   // 칩 한 변(px)
+  CHIP_W: 92, CHIP_H: 72,     // 칩 크기(px) — 색면 50 + 라벨 22 (칩칩 가이드)
   GRAVITY_Y: 1.2,
   FRICTION: 0.8,
   FRICTION_STATIC: 1.0,
@@ -57,7 +57,7 @@ export function createWorld() {
 }
 
 export function makeChipBody(x, y) {
-  return Bodies.rectangle(x, y, P.CHIP, P.CHIP, {
+  return Bodies.rectangle(x, y, P.CHIP_W, P.CHIP_H, {
     friction: P.FRICTION,
     frictionStatic: P.FRICTION_STATIC,
     restitution: P.RESTITUTION,
@@ -124,14 +124,14 @@ export function computeSupport(chips) {
       if (c.body.position.y < bestFrozenY) {
         bestFrozenY = c.body.position.y;
         supportX = c.body.position.x;
-        supportHalf = P.CHIP / 2;
-        supportTopY = c.body.position.y - P.CHIP / 2;
+        supportHalf = P.CHIP_W / 2;
+        supportTopY = c.body.position.y - P.CHIP_H / 2;
       }
       continue;
     }
     const m = c.body.mass;
     mass += m; mx += c.body.position.x * m;
-    topY = Math.min(topY, c.body.position.y - P.CHIP / 2);
+    topY = Math.min(topY, c.body.position.y - P.CHIP_H / 2);
   }
   if (mass === 0) return null;
   const comX = mx / mass;
@@ -151,7 +151,7 @@ export function towerTopY(chips) {
   let top = P.PLATFORM_TOP_Y;
   for (const c of chips) {
     if (c.fallen) continue;
-    top = Math.min(top, c.body.position.y - P.CHIP / 2);
+    top = Math.min(top, c.body.position.y - P.CHIP_H / 2);
   }
   return top;
 }

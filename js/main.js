@@ -1,19 +1,21 @@
 // main.js — 게임 상태머신, 루프, 입력, 카메라, 이동 페이즈, 주스(연출/사운드)
 /* global Matter */
 import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState } from './physics.js';
-import { chipColor, randomStartIndex, bgColorFor, floorColorFor, textColorFor, oklchToHex, oklchLerp } from './colors.js';
-import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage } from './ui.js';
+import { chipColor, randomStartIndex, oklchToHex } from './colors.js';
+import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe } from './ui.js';
 import { Ads } from './ads.js';
 import { Bgm } from './bgm.js';
 import { Leaderboard } from './leaderboard.js';
+import { T, loadFonts, zoneIndex } from './theme.js';
+import { Bg } from './bg.js';
 
 // ─── 게임플레이 튜닝 상수 ────────────────────────────────
 const G = {
   // 페이즈 경계 (착지한 칩 수 기준, 0-base index로 비교)
   PHASE2_AT: 14, PHASE3_AT: 29, PHASE4_AT: 49,
   // 이동 속도(px/s): base + RAMP*n, cap
-  X_BASE: 180, Y_BASE: 160, P3_BONUS: 40, RAMP: 6, X_CAP: 420, Y_CAP: 320,
-  P4_X_SPEED: 260, P4_Y_SPEED: 190,
+  X_BASE: 200, Y_BASE: 180, P3_BONUS: 45, RAMP: 7, X_CAP: 470, Y_CAP: 360,
+  P4_X_SPEED: 290, P4_Y_SPEED: 215,
   X_AMP: 170,                       // 페이즈1 좌우 진폭
   P4_X_AMP: 190, P4_Y_AMP: 70,      // 페이즈4 진폭
   Y_DROP_MIN: 280, Y_DROP_MAX: 440, // 페이즈2 낙하 높이 범위(타워 상단 기준)
@@ -26,11 +28,10 @@ const G = {
   // 카메라/연출
   CAM_TOP_SCREEN_Y: 560,            // 타워 상단이 위치할 화면 y (58% 높이)
   CAM_LERP: 0.08, ZOOM_LERP: 0.05,
-  TOPPLE_SLOWMO: 0.25, TOPPLE_SLOWMO_MS: 400,
-  NEARMISS_SLOWMO: 0.6, NEARMISS_MS: 150,
+  NEARMISS_SLOWMO: 0.6, NEARMISS_MS: 150, // 니어미스 마이크로 슬로모(공정성 장치)는 유지
   SHAKE_AMP: 6,
-  TOPPLE_SPECTACLE_MS: 1400,        // 게임오버 → 결과 패널까지
-  DESAT_MS: 1000,
+  TOPPLE_SPECTACLE_MS: 900,         // 게임오버 → 결과까지 (가이드: 빠른 재도전 루프)
+  CAM_DIP: 4,                       // 착지 시 스택 출렁 (카메라 딥)
 };
 
 const PHASE_NAMES = { 1: 'PHASE 1 · X축', 2: 'PHASE 2 · Y축', 3: 'PHASE 3 · 랜덤', 4: 'PHASE 4 · 대각선' };
@@ -80,13 +81,11 @@ const floorHits = [];
 
 const cam = { y: 0, targetY: 0, zoom: 1, targetZoom: 1 };
 const slowmo = { t: 0, scale: 1 };
-let shakeAmp = 0, desatT = 0, desatOn = false;
-let popups = [], rings = [];
+let shakeAmp = 0, camDip = 0;
+let perfectCount = 0, maxCombo = 0;
+let showTapHint = false;
+let popups = [], rings = [], stamps = [];
 let lastCreakAt = -Infinity, lastBeatAt = -Infinity;
-
-// 배경/바닥/텍스트 컬러 (현재 hue 연동, 1.5s 크로스페이드)
-let bgCur = bgColorFor(chipColor(0, startAnchor).h);
-let bgTarget = bgCur;
 
 onFloorContact(engine, floorSensor, (body) => floorHits.push(body));
 
@@ -145,8 +144,9 @@ function noiseSweep({ from = 1200, to = 200, dur = 0.3, gain = 0.15, q = 1, dela
 const Sfx = {
   // 낙하 휘슬 — 떨어지는 동안 음이 미끄러져 내려가며 결과를 기다리게 만든다
   drop()      { tone(700, 0.35, 'sine', 0.05, 240); tone(300, 0.06, 'square', 0.04, 180); },
-  // 착지 = 묵직한 썸 + 먼지 퍽
-  land()      { tone(120, 0.09, 'sine', 0.15, 70); noiseSweep({ from: 600, to: 120, dur: 0.12, gain: 0.07 }); },
+  // 착지 = "톡" — 두꺼운 종이 카드가 나무에 닿는 폴리 (가이드: 종이·나무 질감)
+  land()      { noiseSweep({ from: 1800, to: 900, dur: 0.06, gain: 0.11, q: 3 });
+                tone(300, 0.05, 'triangle', 0.07, 220); },
   perfect(k)  { const s = [0, 2, 4, 7, 9][Math.min(k - 1, 4)]; // 펜타토닉 상승, 5음 캡
                 const f = 523 * Math.pow(2, s / 12);
                 tone(f, 0.12, 'triangle', 0.12); tone(f * 2, 0.08, 'sine', 0.05, null, 0.03); },
@@ -162,11 +162,15 @@ const Sfx = {
   whoosh()    { noiseSweep({ from: 300, to: 2200, dur: 0.25, gain: 0.14, q: 2 });
                 tone(880, 0.15, 'sine', 0.05, null, 0.24); },
   set()       { tone(392, 0.2, 'triangle', 0.1); tone(523, 0.2, 'triangle', 0.1, null, 0.07); },
-  // 붕괴 — 불협화 톱니 클러스터 + 저역 러블 굉음
-  over()      { tone(220, 0.5, 'sawtooth', 0.08, 55);
-                tone(233, 0.5, 'sawtooth', 0.07, 58, 0.03);
-                tone(65, 0.8, 'sine', 0.15, 30, 0.1);
-                noiseSweep({ from: 150, to: 40, dur: 0.9, gain: 0.22, q: 0.8 }); },
+  // 붕괴 — 카드 뭉치가 와르르 쏟아지는 폴리 (가이드: 밝은 톤 유지, 다크 러블 금지)
+  over()      { [420, 370, 330, 290, 260, 230].forEach((f, i) =>
+                  tone(f * (0.95 + (i % 3) * 0.04), 0.09, 'triangle', 0.09, f * 0.8, i * 0.055));
+                noiseSweep({ from: 2200, to: 700, dur: 0.45, gain: 0.1, q: 1.5 }); },
+  // 고도 구간 전환 — 상승 글리산도
+  zoneUp()    { tone(400, 0.5, 'sine', 0.09, 1100);
+                [523, 659, 784].forEach((f, i) => tone(f, 0.14, 'triangle', 0.07, null, 0.15 + i * 0.09)); },
+  // 콤보 x5 — 브라스풍 스팅
+  combo5()    { [262, 330, 392, 523].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.055, null, i * 0.04)); },
   newBest()   { [660, 880, 1100].forEach((f, i) => tone(f, 0.15, 'triangle', 0.1, null, i * 0.08)); },
 };
 const vibrate = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch { /* */ } };
@@ -193,7 +197,7 @@ function spawnMover() {
   const axis = phase === 1 ? 'x' : phase === 2 ? 'y' : phase === 3 ? (Math.random() < 0.5 ? 'x' : 'y') : 'xy';
   const refX = topChipX();
 
-  const m = { n, phase, axis, col, pal: chipPalette(col), telegraph: phase >= 3 ? G.TELEGRAPH_MS : 0 };
+  const m = { n, phase, axis, col, pal: chipPalette(col, n), telegraph: phase >= 3 ? G.TELEGRAPH_MS : 0 };
   if (axis === 'x') {
     m.cx = P.W / 2; m.ampX = G.X_AMP;
     m.speedX = ramp(phase === 3 ? G.X_BASE + G.P3_BONUS : G.X_BASE, n, G.X_CAP);
@@ -215,8 +219,6 @@ function spawnMover() {
     m.y = midY; m.dirY = -1;
   }
   mover = m;
-  // 배경 크로스페이드 타깃 갱신
-  bgTarget = bgColorFor(col.h);
 }
 
 function updateMover(dtMs) {
@@ -248,6 +250,7 @@ function drop() {
     frozen: false, fallen: false, fallenMs: 0, wasTilted: false,
   };
   mover = null;
+  showTapHint = false;
   settle = { frames: 0, elapsed: 0 };
   state = 'SETTLE';
   Sfx.drop();
@@ -259,7 +262,7 @@ function land() {
   // 미스 판정: 이전 최상단 칩의 윗면 근처까지 올라가지 못했으면 타워 적층 실패
   // (타워 옆 플랫폼에 안착하는 꼼수 차단 — 정상 적층은 이전 칩 중심보다 ~80px 위)
   const prevTop = [...chips].reverse().find((p) => !p.fallen);
-  if (prevTop && c.body.position.y > prevTop.body.position.y - P.CHIP * 0.25) {
+  if (prevTop && c.body.position.y > prevTop.body.position.y - P.CHIP_H * 0.25) {
     c.fallen = true; c.fallenMs = 1e9;
     gameOver('타워에서 미끄러졌습니다!');
     return;
@@ -267,6 +270,8 @@ function land() {
 
   chips.push(c);
   currentChip = null;
+  c.landedAt = performance.now(); // 착지 스쿼시 (drawChip이 0.18s 렌더 전용 처리)
+  camDip = G.CAM_DIP;              // 스택 전체 4px 출렁
   height++;
   score += G.SCORE_LAND;
   Sfx.land();
@@ -277,12 +282,15 @@ function land() {
   const win = G.PERFECT_WIN[phaseFor(height - 1)];
   if (dx <= win && c.gentle) {
     combo++;
+    perfectCount++;
+    maxCombo = Math.max(maxCombo, combo);
     const bonus = G.SCORE_PERFECT * Math.min(combo, G.COMBO_CAP);
     score += bonus;
-    popup(c.body.position.x, c.body.position.y - 70, `PERFECT +${bonus}`, '#fff', 34);
+    stamp(c.body.position.x, c.body.position.y - 90, combo); // PERFECT! 스탬프 (-6°, 5색 순환)
     ring(c.body.position.x, c.body.position.y);
     Sfx.perfect(combo);
     vibrate(15);
+    if (combo === 5) Sfx.combo5();
     if (combo % G.STABILIZE_EVERY === 0) stabilize(c);
   } else {
     combo = 0;
@@ -291,10 +299,11 @@ function land() {
   // 신기록 순간 연출 (플레이 중에 축하)
   if (!newBestShown && Storage.data.bestScore > 0 && score > Storage.data.bestScore) {
     newBestShown = true;
-    popup(P.W / 2, towerTopY(chips) - 160, '🏆 NEW BEST!', '#E8B93E', 44);
+    popup(P.W / 2, towerTopY(chips) - 160, '🏆 NEW BEST!', '#EDAA3C', 44);
     Sfx.newBest();
   }
 
+  Bg.notifyHeight(height);
   freezeStep(chips);
   spawnMover();
   state = 'AIM';
@@ -307,7 +316,7 @@ function stabilize(topChip) {
     Matter.Body.setAngularVelocity(c.body, c.body.angularVelocity * 0.4);
     Matter.Body.setVelocity(c.body, { x: c.body.velocity.x * 0.6, y: c.body.velocity.y * 0.6 });
   }
-  popup(topChip.body.position.x, topChip.body.position.y - 120, 'SET!', '#fff', 40);
+  popup(topChip.body.position.x, topChip.body.position.y - 120, 'SET!', '#FBF4E6', 40);
   ring(topChip.body.position.x, topChip.body.position.y, 160);
   Sfx.set();
 }
@@ -319,11 +328,9 @@ function gameOver(reason) {
   if (currentChip) { chips.push(currentChip); currentChip = null; }
   mover = null;
   state = 'TOPPLING';
-  toppleTimer = G.TOPPLE_SPECTACLE_MS;
-  triggerSlowmo(G.TOPPLE_SLOWMO, G.TOPPLE_SLOWMO_MS);
+  toppleTimer = G.TOPPLE_SPECTACLE_MS; // 가이드: 슬로모션 금지 — 빠르게 무너지고 빠르게 결과로
   shakeAmp = G.SHAKE_AMP;
-  desatOn = true;
-  // 붕괴 전경 샷: 바닥 피벗 줌아웃으로 타워 전체 프레이밍
+  // 붕괴 전경 샷: 바닥 피벗 줌아웃으로 타워 전체 프레이밍 (유지 결정)
   const top = towerTopY(chips);
   cam.targetZoom = Math.min(1, 1204 / (P.FLOOR_Y - top + 180));
   cam.targetY = 0;
@@ -343,7 +350,6 @@ function doContinue() {
     c.frozen = true; c.fallenMs = 0;
   }
   chips = chips.filter((c) => !c.fallen);
-  desatOn = false; desatT = 0;
   shakeAmp = 0;
   cam.targetZoom = 1; cam.zoom = 1;
   Bgm.duck(1);
@@ -357,15 +363,23 @@ function resetRun(startHeight = DEBUG_START_HEIGHT) {
   if (currentChip) Matter.Composite.remove(world, currentChip.body);
   chips = []; currentChip = null; mover = null;
   score = 0; height = 0; combo = 0;
+  perfectCount = 0; maxCombo = 0;
   continueUsed = false; newBestShown = false;
-  desatOn = false; desatT = 0; shakeAmp = 0;
+  shakeAmp = 0; camDip = 0;
   slowmo.t = 0;
-  popups = []; rings = []; floorHits.length = 0;
+  popups = []; rings = []; stamps = []; floorHits.length = 0;
   cam.y = 0; cam.targetY = 0; cam.zoom = 1; cam.targetZoom = 1;
   startAnchor = randomStartIndex(); // 매 판 다른 컬러웨이
+  Bg.snap(0);
   if (startHeight > 0) prebuildTower(startHeight);
   Bgm.duck(1);
   Storage.touchStreak();
+  // 튜토리얼 힌트: 첫 3판만 (가이드)
+  if ((Storage.data.tutorialCount || 0) < 3) {
+    showTapHint = true;
+    Storage.data.tutorialCount = (Storage.data.tutorialCount || 0) + 1;
+    Storage.save();
+  } else showTapHint = false;
   spawnMover();
   state = 'AIM';
 }
@@ -374,26 +388,54 @@ function resetRun(startHeight = DEBUG_START_HEIGHT) {
 function prebuildTower(n) {
   for (let i = 0; i < n; i++) {
     const col = chipColor(i, startAnchor);
-    const body = makeChipBody(P.W / 2, P.PLATFORM_TOP_Y - P.CHIP / 2 - i * P.CHIP);
+    const body = makeChipBody(P.W / 2, P.PLATFORM_TOP_Y - P.CHIP_H / 2 - i * P.CHIP_H);
     Matter.Body.setStatic(body, true);
     Matter.Composite.add(world, body);
-    chips.push({ body, n: i, col, pal: chipPalette(col), frozen: true, fallen: false, fallenMs: 0, wasTilted: false });
+    chips.push({ body, n: i, col, pal: chipPalette(col, i), frozen: true, fallen: false, fallenMs: 0, wasTilted: false });
   }
   height = n;
   score = n * G.SCORE_LAND;
   // 카메라·배경을 즉시 해당 높이로 (페이드/스크롤 생략)
   cam.y = cam.targetY = Math.min(0, towerTopY(chips) - G.CAM_TOP_SCREEN_Y);
-  bgCur = bgTarget = bgColorFor(chipColor(n, startAnchor).h);
+  Bg.snap(cam.y);
 }
 
 initOverlays({
-  onStart: () => { audio(); hideTitle(); resetRun(); },
+  onStart: () => { audio(); wipe(() => { hideTitle(); resetRun(); }); },
   onRestart: () => {
-    const go = () => { hideResult(); resetRun(); };
+    const go = () => wipe(() => { hideResult(); resetRun(); }); // 광고 먼저 → 와이프
     if (Ads.canShowInterstitial()) Ads.showInterstitial(go); else go();
   },
   onContinue: () => Ads.showRewarded(doContinue, () => { /* 중도 이탈 시 결과 화면 유지 */ }),
+  onHome: () => wipe(() => { hideResult(); toTitle(); }),
+  onShare: shareRecord,
 });
+
+// 홈으로 — 월드를 비우고 타이틀로 (스폰 없음)
+function toTitle() {
+  for (const c of chips) Matter.Composite.remove(world, c.body);
+  if (currentChip) Matter.Composite.remove(world, currentChip.body);
+  chips = []; currentChip = null; mover = null;
+  popups = []; rings = []; stamps = []; floorHits.length = 0;
+  cam.y = 0; cam.targetY = 0; cam.zoom = 1; cam.targetZoom = 1;
+  Bg.snap(0);
+  Bgm.duck(1);
+  state = 'TITLE';
+  showTitle();
+}
+
+// 기록 공유 — Web Share, 미지원 시 클립보드 폴백
+async function shareRecord() {
+  const btn = document.getElementById('btnShare');
+  const text = `CHIP! CHIP! 칩칩! 서울에서 ${height}칩 · ${score}점을 쌓았어요! 🏙️`;
+  const url = location.origin + location.pathname;
+  try {
+    if (navigator.share) { await navigator.share({ text, url }); return; }
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '기록 공유'; }, 1500);
+  } catch { /* 공유 취소 등 무시 */ }
+}
 
 // ─── 판정 루프 ───────────────────────────────────────────
 function triggerSlowmo(scale, ms) { slowmo.scale = scale; slowmo.t = ms; }
@@ -464,57 +506,34 @@ function checkToppleAndSettle(dtMs) {
   }
 }
 
-// ─── 낙하 가이드 (전구 스트립) ───────────────────────────
-// 이동 범위를 따라 작은 전구가 늘어서고, 퍼펙트 존 전구만 그린.
-// 칩이 그린 존에 들어오면 전구가 커지고 칩에 그린 글로우 — "지금 눌러" 신호.
-const GUIDE = {
-  SPACING: 24,       // 전구 간격(px)
-  OFFSET: 64,        // 칩 경로에서 스트립까지 거리
-  Y_GENTLE: 40,      // Y축 그린 존: 최저점에서 이 높이 이내 (drop()의 gentle 조건과 동일)
-  GREEN: '52,199,89',
-};
+// ─── 낙하 가이드 (칩칩 가이드: 점선 + 칩 글로우) ─────────
+// 낙하 칩 하단 → 착지점까지 3px INK 30% 점선. 퍼펙트 타이밍엔 칩에 오렌지 글로우 펄스.
+const Y_GENTLE = 40; // Y축 부드러운 착지 존 (drop()의 gentle 조건과 동일)
 
 function dropReady(m) {
   const win = G.PERFECT_WIN[m.phase];
   const xOk = !m.speedX || Math.abs(m.x - topChipX()) <= win;
-  const yOk = m.yMax === undefined || (m.yMax - m.y) <= GUIDE.Y_GENTLE;
+  const yOk = m.yMax === undefined || (m.yMax - m.y) <= Y_GENTLE;
   return xOk && yOk;
 }
 
-function drawBulb(ctx, x, y, isTarget, isCur) {
-  let r = 4, color = 'rgba(120,120,130,0.3)';                      // 꺼진 전구
-  if (isTarget && isCur) {                                          // 그린 존 + 칩 위치 일치
-    ctx.fillStyle = `rgba(${GUIDE.GREEN},0.25)`;
-    ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill(); // 글로우
-    r = 8; color = `rgb(${GUIDE.GREEN})`;
-  } else if (isTarget) { r = 5; color = `rgba(${GUIDE.GREEN},0.6)`; }
-  else if (isCur)      { r = 6; color = 'rgba(255,255,255,0.9)'; }
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-}
+function drawDropGuide(ctx, m, nowMs, night) {
+  // 착지점까지 점선 (3px, INK 30% — 밤 존에선 CREAM)
+  const top = towerTopY(chips);
+  ctx.strokeStyle = night ? T.CREAM_30 : T.INK_30;
+  ctx.lineWidth = 3;
+  ctx.setLineDash([10, 8]);
+  ctx.beginPath();
+  ctx.moveTo(m.x, m.y + P.CHIP_H / 2 + 6);
+  ctx.lineTo(m.x, top - 4);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-function drawDropGuide(ctx, m, nowMs) {
-  const win = Math.max(G.PERFECT_WIN[m.phase], 13);
-  const targetX = topChipX();
-  const half = GUIDE.SPACING / 2 + 1;
-
-  if (m.speedX) { // 수평 스트립 — 그린 존 = 타워 최상단 칩 중심 ± 퍼펙트 윈도우
-    const gy = (m.yMin !== undefined ? m.yMin : m.y) - GUIDE.OFFSET;
-    for (let bx = m.cx - m.ampX; bx <= m.cx + m.ampX + 1; bx += GUIDE.SPACING) {
-      drawBulb(ctx, bx, gy, Math.abs(bx - targetX) <= win, Math.abs(bx - m.x) < half);
-    }
-  }
-  if (m.speedY) { // 수직 스트립 — 그린 존 = 최저점 근처(부드러운 착지)
-    const gx = m.x + GUIDE.OFFSET > 660 ? m.x - GUIDE.OFFSET : m.x + GUIDE.OFFSET;
-    for (let by = m.yMin; by <= m.yMax + 1; by += GUIDE.SPACING) {
-      drawBulb(ctx, gx, by, (m.yMax - by) <= GUIDE.Y_GENTLE + 4, Math.abs(by - m.y) < half);
-    }
-  }
-  if (dropReady(m)) { // 칩 자체에 그린 글로우 펄스
+  if (dropReady(m)) { // 퍼펙트 타이밍 — 칩에 강조색 글로우 펄스
     const pulse = 0.55 + 0.45 * Math.sin(nowMs / 80);
-    ctx.strokeStyle = `rgba(${GUIDE.GREEN},${pulse})`;
+    ctx.strokeStyle = `rgba(228,87,46,${pulse.toFixed(3)})`; // T.ORANGE
     ctx.lineWidth = 5;
-    ctx.strokeRect(m.x - P.CHIP / 2 - 7, m.y - P.CHIP / 2 - 7, P.CHIP + 14, P.CHIP + 14);
+    ctx.strokeRect(m.x - P.CHIP_W / 2 - 7, m.y - P.CHIP_H / 2 - 7, P.CHIP_W + 14, P.CHIP_H + 14);
   }
 }
 
@@ -528,6 +547,11 @@ function updateCamera() {
   cam.zoom += (cam.targetZoom - cam.zoom) * G.ZOOM_LERP;
 }
 
+// PERFECT! 스탬프 — -6°, back-out 등장, 연속 퍼펙트마다 5색 순환 (가이드)
+function stamp(x, y, comboN) {
+  stamps.push({ x, y, color: T.GAME5[(comboN - 1) % 5], age: 0 });
+}
+
 function popup(x, y, text, color = '#fff', size = 30) {
   popups.push({ x, y, text, color, size, age: 0, life: 900 });
 }
@@ -538,11 +562,10 @@ function ring(x, y, maxR = 110) {
 function updateJuice(rawDt) {
   if (slowmo.t > 0) slowmo.t -= rawDt;
   shakeAmp = Math.max(0, shakeAmp - rawDt * 0.02);
-  if (desatOn) desatT = Math.min(1, desatT + rawDt / G.DESAT_MS);
+  camDip *= Math.pow(0.85, rawDt / 16.7);
+  stamps = stamps.filter((s) => (s.age += rawDt) < 600);
   popups = popups.filter((p) => (p.age += rawDt) < p.life);
   rings = rings.filter((r) => (r.age += rawDt) < r.life);
-  // 배경 크로스페이드 (~1.5s)
-  bgCur = oklchLerp(bgCur, bgTarget, Math.min(1, rawDt / 1500 * 3));
 
   if (state === 'TOPPLING') {
     toppleTimer -= rawDt;
@@ -550,24 +573,27 @@ function updateJuice(rawDt) {
       state = 'RESULT';
       const d = Storage.data;
       showResult({
-        score, height, best: d.bestScore,
+        score, height,
         isNewBest: score >= d.bestScore && score > 0,
-        reason: gameOverReason,
         canContinue: !continueUsed && height > 0,
         askNickname: Leaderboard.enabled && !d.nickname && score > 0,
+        perfectCount, maxCombo,
+        zoneName: T.ZONE_NAMES[zoneIndex(height)],
       });
     }
   }
 }
 
 // ─── 렌더 ────────────────────────────────────────────────
+let lastRenderNow = performance.now();
 function render(nowMs) {
+  const renderDt = Math.min(100, nowMs - lastRenderNow);
+  lastRenderNow = nowMs;
   ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
 
-  // 배경 (배경 hue는 칩 hue의 보색이므로, 칩 hue = 배경 hue + 180)
-  const chipHue = (bgCur.h + 180) % 360;
-  ctx.fillStyle = oklchToHex(bgCur);
-  ctx.fillRect(0, 0, P.W, P.H);
+  // 배경 — 서울 4존 고도 시스템 (스크린 공간, 카메라 변환 밖)
+  Bg.draw(ctx, cam.y, renderDt, nowMs);
+  const night = Bg.isNight(cam.y);
 
   ctx.save();
   // 셰이크
@@ -578,24 +604,28 @@ function render(nowMs) {
   const z = cam.zoom;
   ctx.translate(P.W / 2 * (1 - z), P.FLOOR_Y * (1 - z));
   ctx.scale(z, z);
-  ctx.translate(0, -cam.y);
+  ctx.translate(0, -cam.y + camDip);
 
-  // 바닥/플랫폼
-  const floorHex = oklchToHex(floorColorFor(chipHue));
-  ctx.fillStyle = floorHex;
+  // 지면 밴드 + 플랫폼 (월드 공간 — 물리와 정렬)
+  ctx.fillStyle = T.GROUND;
   ctx.fillRect(-P.W, P.FLOOR_Y, P.W * 3, 400);
+  ctx.strokeStyle = T.INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-P.W, P.FLOOR_Y); ctx.lineTo(P.W * 2, P.FLOOR_Y); ctx.stroke();
+  ctx.fillStyle = T.INK;
   ctx.fillRect(P.W / 2 - 24, P.PLATFORM_TOP_Y + P.PLATFORM_H, 48, P.FLOOR_Y - P.PLATFORM_TOP_Y - P.PLATFORM_H); // 다리
+  ctx.fillStyle = T.BG_TAN;
   ctx.fillRect(P.W / 2 - P.PLATFORM_W / 2, P.PLATFORM_TOP_Y, P.PLATFORM_W, P.PLATFORM_H); // 슬래브
+  ctx.strokeStyle = T.INK; ctx.lineWidth = 3;
+  ctx.strokeRect(P.W / 2 - P.PLATFORM_W / 2 + 1.5, P.PLATFORM_TOP_Y + 1.5, P.PLATFORM_W - 3, P.PLATFORM_H - 3);
 
   // 칩 (동결 → 활성 순으로)
-  const desat = desatT;
-  for (const c of chips) drawChip(ctx, c, desat);
-  if (currentChip) drawChip(ctx, currentChip, desat);
+  for (const c of chips) drawChip(ctx, c);
+  if (currentChip) drawChip(ctx, currentChip, { falling: true });
 
   // 조준 칩 + 텔레그래프
   if (mover && state === 'AIM') {
     if (mover.telegraph > 0) {
-      ctx.fillStyle = oklchToHex(textColorFor(chipHue));
+      ctx.fillStyle = night ? T.CREAM : T.INK;
       ctx.font = '800 72px -apple-system, sans-serif';
       ctx.textAlign = 'center';
       const blink = Math.sin(nowMs / 60) * 0.3 + 0.7;
@@ -603,20 +633,40 @@ function render(nowMs) {
       ctx.fillText(mover.axis === 'y' ? '↕' : mover.axis === 'xy' ? '⤢' : '↔', mover.x, mover.y + 24);
       ctx.globalAlpha = 1;
     } else {
-      drawDropGuide(ctx, mover, nowMs);
-      drawChip(ctx, { body: { position: { x: mover.x, y: mover.y }, angle: 0 }, n: mover.n, col: mover.col, pal: mover.pal });
+      drawDropGuide(ctx, mover, nowMs, night);
+      drawChip(ctx, { body: { position: { x: mover.x, y: mover.y }, angle: 0 }, n: mover.n, col: mover.col, pal: mover.pal }, { falling: true });
     }
   }
 
   // 무게중심 인디케이터
   if (state === 'AIM' || state === 'SETTLE') {
-    drawCOMIndicator(ctx, computeSupport(chips), nowMs);
+    drawCOMIndicator(ctx, computeSupport(chips), nowMs, night);
+  }
+
+  // PERFECT! 스탬프 (월드 공간, -6°, back-out 등장, INK 하드섀도)
+  for (const s of stamps) {
+    const t = Math.min(1, s.age / 250);
+    const c1 = 1.70158; // back-out 커브
+    const scale = 1.4 - 0.4 * (1 + (c1 + 1) * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2));
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(-6 * Math.PI / 180);
+    ctx.scale(scale, scale);
+    ctx.font = `34px ${T.F_DISPLAY}`;
+    ctx.textAlign = 'center';
+    ctx.globalAlpha = s.age > 450 ? (600 - s.age) / 150 : 1;
+    ctx.fillStyle = T.INK;
+    ctx.fillText('PERFECT!', 3, 3);
+    ctx.fillStyle = s.color;
+    ctx.fillText('PERFECT!', 0, 0);
+    ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
   // 링/팝업 (월드 공간 — 타워와 함께 스크롤)
   for (const r of rings) {
     const t = r.age / r.life;
-    ctx.strokeStyle = `rgba(255,255,255,${(1 - t) * 0.9})`;
+    ctx.strokeStyle = `rgba(251,244,230,${((1 - t) * 0.9).toFixed(3)})`;
     ctx.lineWidth = 4 * (1 - t) + 1;
     ctx.beginPath();
     ctx.arc(r.x, r.y, r.maxR * t, 0, Math.PI * 2);
@@ -626,20 +676,23 @@ function render(nowMs) {
   for (const p of popups) {
     const t = p.age / p.life;
     ctx.globalAlpha = 1 - t * t;
+    ctx.font = `${p.size}px ${T.F_HEAD}`;
+    ctx.fillStyle = T.INK;
+    ctx.fillText(p.text, p.x + 2, p.y - t * 60 + 2);
     ctx.fillStyle = p.color;
-    ctx.font = `800 ${p.size}px -apple-system, "Noto Sans KR", sans-serif`;
     ctx.fillText(p.text, p.x, p.y - t * 60);
     ctx.globalAlpha = 1;
   }
   ctx.restore();
 
+  // 토스트 (스크린 공간)
+  Bg.drawOverlay(ctx, nowMs);
+
   // HUD (스크린 공간)
   if (state !== 'TITLE') {
-    drawHUD(ctx, {
-      score, height, best: Storage.data.bestScore, combo,
-      phaseName: PHASE_NAMES[phaseFor(height)],
-      textHex: oklchToHex(textColorFor(chipHue)),
-    });
+    drawHUD(ctx, { score, height, zoneName: T.ZONE_NAMES[zoneIndex(height)] });
+    // 튜토리얼 탭 힌트 (첫 3판, 첫 드롭 전까지)
+    if (showTapHint && state === 'AIM') drawTapHint(ctx);
   }
 }
 
@@ -678,7 +731,7 @@ canvas.addEventListener('pointerdown', (e) => {
 }, { passive: false });
 
 // ─── 랭킹보드 ────────────────────────────────────────────
-let boardRange = 'all';
+let boardRange = 'day';
 async function openBoard(range = boardRange) {
   boardRange = range;
   setBoardTab(range);
@@ -696,9 +749,9 @@ function initBoardUI() {
     btnBoardTitle.style.display = 'none';
     return;
   }
-  btnBoard.addEventListener('click', () => openBoard());
-  btnBoardTitle.addEventListener('click', () => openBoard());
-  document.getElementById('btnBoardClose').addEventListener('click', hideBoard);
+  btnBoard.addEventListener('click', () => wipe(() => openBoard()));
+  btnBoardTitle.addEventListener('click', () => wipe(() => openBoard()));
+  document.getElementById('btnBoardClose').addEventListener('click', () => wipe(hideBoard));
   document.querySelectorAll('#boardTabs .tab').forEach((b) =>
     b.addEventListener('click', () => openBoard(b.dataset.range)));
 
@@ -726,8 +779,10 @@ btnSound.addEventListener('click', () => {
 Storage.load();
 syncSoundBtn();
 initBoardUI();
+Bg.onZoneUp = () => Sfx.zoneUp(); // 존 전환 토스트와 동기된 상승 글리산도
 showTitle();
-requestAnimationFrame(frame);
+// 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 실패 시 2.5s 후 폴백 진행
+loadFonts().finally(() => requestAnimationFrame(frame));
 
 // QA/디버그 훅
 window.__CHROMA = {

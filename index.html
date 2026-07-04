@@ -3,114 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <!--
-  CHROMA STACK — 팬톤 컬러칩 물리 스태킹 프로토타입
-  실행: 이 폴더에서 `python3 -m http.server 8765` 후 http://localhost:8765 접속
+  CHIP! CHIP! 칩칩! — 한 번의 터치로 쌓는 컬러의 탑 (팬톤 컬러칩 물리 스태킹)
+  실행: 이 폴더에서 `python3 -m http.server 8912` 후 http://localhost:8912 접속
   (ES 모듈을 사용하므로 file:// 직접 열기는 동작하지 않음)
-  디버그: ?noads 파라미터로 광고 스텁 비활성화
+  디버그: ?noads 광고 스텁 끔 · ?phase=2|3|4 · ?height=N 고도 점프
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>CHROMA STACK</title>
+<title>CHIP! CHIP! 칩칩!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
+  /* ── 칩칩 디자인 토큰: PAPER #F3E9D7 · INK #33261A · CREAM #FBF4E6
+       하드섀도(블러 금지) · 외곽선 2–3px INK · 라운드 금지 · 오렌지 CTA는 화면당 1곳 ── */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
     height: 100%;
-    background: #101014;
+    background: #33261A; /* 레터박스 = INK */
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+    font-family: 'IBM Plex Sans KR', -apple-system, sans-serif;
+    color: #33261A;
     -webkit-user-select: none; user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
-  body { display: flex; align-items: center; justify-content: center; }
-  #wrap { position: relative; }
+  body { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #wrap { position: relative; overflow: hidden; }
   #game { display: block; touch-action: none; }
 
   .overlay {
-    position: absolute; inset: 0;
+    position: absolute; inset: 0; z-index: 20;
     display: none;
     flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; text-align: center;
-    background: rgba(16, 16, 20, 0.35);
-    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    gap: 16px; text-align: center;
+    background: #F3E9D7;
+    overflow: hidden;
   }
-  .overlay h1 { font-size: 46px; font-weight: 800; letter-spacing: 4px; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
-  .overlay .sub { font-size: 15px; color: rgba(255,255,255,.85); letter-spacing: 1px; }
-  .overlay .stat { font-size: 17px; color: rgba(255,255,255,.9); min-height: 22px; }
-  .overlay .big { font-size: 64px; font-weight: 800; color: #fff; line-height: 1.1; }
 
-  button {
-    font: inherit; font-weight: 700; font-size: 19px;
-    padding: 15px 44px; border: none; border-radius: 999px;
-    cursor: pointer; letter-spacing: 1px;
-    color: #1c1c22; background: #fff;
-    box-shadow: 0 6px 22px rgba(0,0,0,.25);
-    transition: transform .08s;
-  }
-  button:active { transform: scale(.95); }
-  #btnContinue { background: #E8B93E; }
+  /* 5색 상단 띠 (커버 모티프) */
+  .strip5 { position: absolute; top: 0; left: 0; right: 0; height: 12px; display: flex; }
+  .strip5 i { flex: 1; }
+  .strip5 i:nth-child(1) { background: #E4572E; }
+  .strip5 i:nth-child(2) { background: #EDAA3C; }
+  .strip5 i:nth-child(3) { background: #6E7F3C; }
+  .strip5 i:nth-child(4) { background: #1F7A72; }
+  .strip5 i:nth-child(5) { background: #A93B2A; }
 
-  button.ghost {
-    background: rgba(255,255,255,.18); color: #fff;
-    font-size: 16px; padding: 10px 30px; box-shadow: none;
-    border: 1px solid rgba(255,255,255,.4);
+  /* ── 버튼 (스티커) ── */
+  button, .btn {
+    font-family: 'Jua', sans-serif; font-size: 19px;
+    color: #33261A; background: #FBF4E6;
+    border: 3px solid #33261A; border-radius: 0;
+    box-shadow: 4px 4px 0 #33261A;
+    padding: 12px 30px; cursor: pointer; letter-spacing: 0.5px;
   }
+  button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #33261A; }
+  .btn-big { font-size: 24px; padding: 16px 52px; }
+  .btn-teal { background: #1F7A72; color: #FBF4E6; }
+  .btn-mustard { background: #EDAA3C; color: #33261A; }
+  .btn-half { flex: 1; font-size: 17px; padding: 12px 8px; }
+
+  /* ── 타이틀 (로고 락업) ── */
+  .logo-chips { display: flex; align-items: flex-end; margin-bottom: 4px; }
+  .logo-chips i { width: 44px; height: 28px; border: 3px solid #33261A; display: block; }
+  .logo-chips i:nth-child(1) { background: #1F7A72; }
+  .logo-chips i:nth-child(2) { background: #EDAA3C; margin-left: -28px; margin-bottom: 30px; }
+  .logo-chips i:nth-child(3) { background: #E4572E; margin-left: -30px; margin-bottom: 60px; }
+  .logo-en {
+    font-family: 'Rammetto One', cursive; font-size: 54px; line-height: 1.05;
+    color: #E4572E; text-shadow: 4px 4px 0 #33261A;
+  }
+  .logo-kr { font-family: 'Jua', sans-serif; font-size: 28px; }
+  .tagline { font-size: 15px; font-weight: 500; color: #6b5947; }
+  .stat-badge {
+    font-family: 'Jua', sans-serif; font-size: 16px; min-height: 20px;
+    color: #33261A;
+  }
+  .stat-badge:empty { display: none; }
+
+  /* ── 결과 화면 (오렌지 풀블리드 + 결과칩 카드) ── */
+  #result { background: #E4572E; gap: 14px; }
+  .r-title {
+    font-family: 'Jua', sans-serif; font-size: 36px; color: #FBF4E6;
+    text-shadow: 3px 3px 0 #33261A;
+  }
+  .r-chip {
+    width: 240px; border: 3px solid #33261A; box-shadow: 6px 6px 0 #33261A;
+    display: flex; flex-direction: column; background: #FBF4E6;
+  }
+  .r-face {
+    background: #EDAA3C; min-height: 160px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  }
+  #resultScore { font-family: 'Rammetto One', cursive; font-size: 68px; line-height: 1.1; color: #33261A; }
+  .r-face-sub { font-family: 'Jua', sans-serif; font-size: 18px; color: #33261A; }
+  .r-label {
+    border-top: 3px solid #33261A; padding: 10px 14px; text-align: left;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  #resultCode { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; }
+  #resultMeta { font-family: 'Jua', sans-serif; font-size: 14px; color: #55452F; }
+  .r-stats { display: flex; gap: 14px; }
+  .r-stat {
+    background: #FBF4E6; border: 2px solid #33261A; box-shadow: 3px 3px 0 #33261A;
+    padding: 8px 18px; display: flex; flex-direction: column; min-width: 92px;
+  }
+  .r-stat b { font-family: 'Rammetto One', cursive; font-size: 20px; font-weight: 400; }
+  .r-stat label { font-family: 'Jua', sans-serif; font-size: 12px; color: #6b5947; }
+  .r-ctas { display: flex; flex-direction: column; gap: 12px; width: 76%; max-width: 340px; }
+  .r-ctas .btn-big { width: 100%; padding: 15px 0; }
+  .r-row { display: flex; gap: 12px; }
+  #btnContinue { width: 100%; }
+
+  /* 진입 모션: 결과 칩 "툭" 낙하 + 버튼 순차 슬라이드 업 */
+  #result.show .r-chip { animation: chipDropIn 0.45s cubic-bezier(.3,1.4,.5,1) both; }
+  #result.show .r-stats { animation: slideUp 0.3s 0.25s both; }
+  #result.show .r-ctas  { animation: slideUp 0.3s 0.4s both; }
+  @keyframes chipDropIn { from { transform: translateY(-140%); } to { transform: translateY(0); } }
+  @keyframes slideUp { from { transform: translateY(28px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
   #nickRow { display: none; gap: 8px; align-items: center; }
   #nickRow input {
-    font: inherit; font-size: 16px; width: 170px;
-    padding: 11px 16px; border: none; border-radius: 999px;
-    text-align: center; outline: none;
+    font-family: 'Jua', sans-serif; font-size: 16px; width: 170px;
+    padding: 11px 16px; border: 2px solid #33261A; border-radius: 0;
+    background: #FBF4E6; color: #33261A; text-align: center; outline: none;
   }
-  #nickRow button { font-size: 16px; padding: 11px 22px; background: #E8B93E; }
+  #nickRow button { font-size: 16px; padding: 11px 20px; background: #EDAA3C; box-shadow: 3px 3px 0 #33261A; }
 
-  #boardTabs { display: flex; gap: 8px; }
-  #boardTabs .tab {
-    font-size: 15px; padding: 8px 16px; box-shadow: none;
-    white-space: nowrap; flex-shrink: 0;
-    background: rgba(255,255,255,.18); color: rgba(255,255,255,.8);
-    border: 1px solid rgba(255,255,255,.3);
-  }
-  #boardTabs .tab.active { background: #fff; color: #1c1c22; }
-
-  #boardList {
-    width: 86%; max-width: 420px; height: 46%;
-    overflow-y: auto; border-radius: 14px;
-    background: rgba(0,0,0,.25); padding: 8px 0;
-  }
-  .board-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 12px; color: #fff; font-size: 15px;
-  }
-  .board-row .rank { flex: 0 0 30px; text-align: right; font-weight: 800; opacity: .75; }
-  /* 닉네임이 최우선으로 보이도록: 다른 컬럼은 축소 금지, 닉네임만 말줄임 */
-  .board-row .nick { flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .board-row .pts  { flex: 0 0 auto; font-weight: 700; }
-  .board-row .ht   { flex: 0 0 auto; text-align: right; font-size: 11px; opacity: .6; }
-  .board-row.me { background: rgba(232,185,62,.25); border-left: 3px solid #E8B93E; }
-  .board-msg { color: rgba(255,255,255,.75); padding: 30px 0; font-size: 15px; }
-
-  #btnSound {
-    position: absolute; top: 10px; right: 10px; z-index: 10;
+  /* ── 랭킹 화면 ── */
+  #board { justify-content: flex-start; padding: 5% 6% 4%; gap: 12px; }
+  .board-head { display: flex; align-items: center; width: 100%; }
+  .board-head h2 { font-family: 'Jua', sans-serif; font-size: 26px; font-weight: 400; flex: 1; }
+  #btnBoardClose {
     width: 44px; height: 44px; padding: 0;
-    font-size: 20px; line-height: 44px;
-    background: rgba(255,255,255,.35); box-shadow: none;
-    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    font-family: 'Rammetto One', cursive; font-size: 17px;
+    border-width: 2px; box-shadow: 3px 3px 0 #33261A;
+  }
+  .board-spacer { width: 44px; }
+  #boardTabs { display: flex; width: 100%; border: 2px solid #33261A; background: #FBF4E6; }
+  #boardTabs .tab {
+    flex: 1; padding: 10px 0; border: none; border-radius: 0; box-shadow: none;
+    font-family: 'Jua', sans-serif; font-size: 15px; background: #FBF4E6; color: #33261A;
+  }
+  #boardTabs .tab + .tab { border-left: 2px solid #33261A; }
+  #boardTabs .tab.active { background: #E4572E; color: #FBF4E6; }
+  #boardTabs .tab:active { transform: none; }
+
+  #podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; min-height: 0; }
+  .pod { display: flex; flex-direction: column; border: 3px solid #33261A; box-shadow: 3px 3px 0 #33261A; width: 104px; }
+  .pod.p1 { width: 114px; box-shadow: 4px 4px 0 #33261A; }
+  .pod-face { display: flex; align-items: center; justify-content: center; position: relative; }
+  .pod-face b { font-family: 'Rammetto One', cursive; font-weight: 400; }
+  .pod-flag {
+    position: absolute; top: -3px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 9px solid transparent; border-right: 9px solid transparent;
+    border-top: 12px solid #E4572E;
+  }
+  .pod-label { background: #FBF4E6; border-top: 3px solid #33261A; padding: 5px 7px; text-align: left; }
+  .pod-label .nick { font-family: 'Jua', sans-serif; font-size: 12px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pod-label .code { font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; color: #6b5947; white-space: nowrap; overflow: hidden; display: block; }
+
+  #boardList { width: 100%; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .board-row {
+    background: #FBF4E6; border: 2px solid #33261A;
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  }
+  .board-row .rank { width: 30px; font-family: 'Rammetto One', cursive; font-size: 14px; color: #6b5947; text-align: right; flex-shrink: 0; }
+  .board-row .swatch { width: 20px; height: 14px; border: 2px solid #33261A; flex-shrink: 0; }
+  .board-row .nick { font-family: 'Jua', sans-serif; font-size: 15px; flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-row .pts { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: #55452F; flex-shrink: 0; }
+  .board-msg { font-family: 'Jua', sans-serif; color: #6b5947; padding: 30px 0; font-size: 15px; }
+  #myRow { width: 100%; }
+  #myRow .board-row { border: 3px solid #E4572E; box-shadow: 4px 4px 0 #33261A; padding: 12px 14px; }
+  #myRow .rank { color: #E4572E; }
+  #myRow:empty { display: none; }
+
+  /* ── 화면 전환: 5색 칩 띠 와이프 (아래→위) ── */
+  #wipe {
+    position: absolute; inset: 0; z-index: 40; pointer-events: none;
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+  }
+  #wipe.in  { transform: translateY(0); transition: transform 0.2s ease-in; }
+  #wipe.out { transform: translateY(-100%); transition: transform 0.2s ease-out; }
+  #wipe i { flex: 1; border-top: 3px solid #33261A; }
+  #wipe i:nth-child(1) { background: #A93B2A; }
+  #wipe i:nth-child(2) { background: #1F7A72; }
+  #wipe i:nth-child(3) { background: #6E7F3C; }
+  #wipe i:nth-child(4) { background: #EDAA3C; }
+  #wipe i:nth-child(5) { background: #E4572E; }
+
+  /* ── 사운드 버튼 (스티커) ── */
+  #btnSound {
+    position: absolute; top: 6.5%; right: 12px; z-index: 10;
+    width: 44px; height: 44px; padding: 0;
+    font-size: 19px; line-height: 40px;
+    border-width: 2px; box-shadow: 3px 3px 0 #33261A;
   }
 
-  /* 광고 스텁 오버레이 (ads.js가 body에 생성) */
+  /* ── 광고 스텁 오버레이 (ads.js가 body에 생성) ── */
   #adOverlay {
     position: fixed; inset: 0; z-index: 50;
     display: none; align-items: center; justify-content: center;
-    background: rgba(10, 10, 12, 0.92);
+    background: rgba(51, 38, 26, 0.94);
   }
-  #adOverlay .ad-box { width: 300px; text-align: center; color: #fff; }
+  #adOverlay .ad-box { width: 300px; text-align: center; color: #FBF4E6; }
   #adOverlay .ad-label {
-    display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 2px;
-    border: 1px solid rgba(255,255,255,.5); border-radius: 4px;
-    padding: 3px 10px; margin-bottom: 16px; color: rgba(255,255,255,.7);
+    display: inline-block; font-family: 'Rammetto One', cursive; font-size: 12px; letter-spacing: 2px;
+    border: 2px solid #FBF4E6; padding: 3px 10px; margin-bottom: 16px; color: #FBF4E6;
   }
-  #adOverlay .ad-text { font-size: 17px; margin-bottom: 18px; letter-spacing: 1px; }
-  #adOverlay .ad-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; }
-  #adOverlay .ad-bar-fill { height: 100%; width: 0; background: #E8B93E; }
+  #adOverlay .ad-text { font-family: 'Jua', sans-serif; font-size: 17px; margin-bottom: 18px; letter-spacing: 1px; }
+  #adOverlay .ad-bar { height: 8px; background: rgba(251,244,230,.2); border: 1px solid #FBF4E6; overflow: hidden; }
+  #adOverlay .ad-bar-fill { height: 100%; width: 0; background: #EDAA3C; }
 </style>
 </head>
 <body>
@@ -118,39 +222,72 @@
     <canvas id="game"></canvas>
     <button id="btnSound" aria-label="배경음악 켜기/끄기">🔊</button>
 
+    <!-- 타이틀 -->
     <div id="title" class="overlay">
-      <h1>CHROMA STACK</h1>
-      <div class="sub">한 번의 탭으로 컬러칩을 쌓아 올리세요</div>
-      <div id="titleBest" class="stat"></div>
-      <div id="titleStreak" class="stat"></div>
-      <button id="btnStart">시작하기</button>
-      <button id="btnBoardTitle" class="ghost">🏆 랭킹</button>
+      <div class="strip5"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="logo-chips"><i></i><i></i><i></i></div>
+      <div>
+        <div class="logo-en">CHIP! CHIP!</div>
+        <div class="logo-kr">칩칩!</div>
+      </div>
+      <div class="tagline">한 번의 터치로 쌓는 컬러의 탑</div>
+      <div id="titleBest" class="stat-badge"></div>
+      <div id="titleStreak" class="stat-badge"></div>
+      <button id="btnStart" class="btn-big">쌓아 볼까?</button>
+      <button id="btnBoardTitle" class="btn-teal">🏆 랭킹</button>
     </div>
 
+    <!-- 결과 (와르르...!) -->
     <div id="result" class="overlay">
-      <div id="resultReason" class="sub"></div>
-      <div id="resultScore" class="big">0</div>
-      <div id="resultHeight" class="stat"></div>
-      <div id="resultBest" class="stat"></div>
+      <div class="r-title">와르르...!</div>
+      <div class="r-chip">
+        <div class="r-face">
+          <div id="resultScore">0</div>
+          <div class="r-face-sub">점을 모았어요</div>
+        </div>
+        <div class="r-label">
+          <div id="resultCode">CC 000-C</div>
+          <div id="resultMeta">서울 · 0칩</div>
+        </div>
+      </div>
+      <div class="r-stats">
+        <div class="r-stat"><b id="statPerfect">0</b><label>퍼펙트</label></div>
+        <div class="r-stat"><b id="statCombo">x0</b><label>최다 콤보</label></div>
+      </div>
       <div id="nickRow">
         <input id="nickInput" maxlength="12" placeholder="닉네임 (2~12자)" autocomplete="off">
         <button id="btnNickSave">등록</button>
       </div>
-      <button id="btnContinue">📺 광고 보고 이어하기</button>
-      <button id="btnRestart">다시하기</button>
-      <button id="btnBoard" class="ghost">🏆 랭킹</button>
+      <div class="r-ctas">
+        <button id="btnContinue" class="btn-teal">📺 이어서 쌓기</button>
+        <button id="btnRestart" class="btn-big">다시 쌓기</button>
+        <div class="r-row">
+          <button id="btnShare" class="btn-teal btn-half">기록 공유</button>
+          <button id="btnBoard" class="btn-half">🏆 랭킹</button>
+          <button id="btnHome" class="btn-mustard btn-half">홈으로</button>
+        </div>
+      </div>
     </div>
 
+    <!-- 랭킹 -->
     <div id="board" class="overlay">
-      <h1 style="font-size:30px">🏆 랭킹</h1>
-      <div id="boardTabs">
-        <button class="tab active" data-range="all">전체</button>
-        <button class="tab" data-range="day">일간</button>
-        <button class="tab" data-range="week">주간</button>
+      <div class="board-head">
+        <button id="btnBoardClose">&lt;</button>
+        <h2>랭킹</h2>
+        <div class="board-spacer"></div>
       </div>
+      <div id="boardTabs">
+        <button class="tab active" data-range="day">오늘</button>
+        <button class="tab" data-range="week">주간</button>
+        <button class="tab" data-range="all">전체</button>
+      </div>
+      <div id="podium"></div>
       <div id="boardList"></div>
-      <button id="btnBoardClose" class="ghost">닫기</button>
+      <div id="myRow"></div>
     </div>
+
+    <!-- 화면 전환 와이프 -->
+    <div id="wipe"><i></i><i></i><i></i><i></i><i></i></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>

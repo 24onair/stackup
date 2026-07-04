@@ -1,6 +1,7 @@
-// ui.js — HUD/무게중심 인디케이터(캔버스) + 타이틀/결과 오버레이(DOM) + localStorage
+// ui.js — HUD/무게중심 인디케이터(캔버스) + 타이틀/결과/랭킹 오버레이(DOM) + localStorage
 import { P } from './physics.js';
-import { oklchToHex } from './colors.js';
+import { oklchToHex, chipColor } from './colors.js';
+import { T, chipCode, koreanColorName } from './theme.js';
 
 // ─── localStorage ────────────────────────────────────────
 const LS_KEY = 'chromaStack.v1';
@@ -36,30 +37,58 @@ export const Storage = {
 // ─── DOM 오버레이 ────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 
-export function initOverlays({ onStart, onRestart, onContinue }) {
+export function initOverlays({ onStart, onRestart, onContinue, onHome, onShare }) {
   $('btnStart').addEventListener('click', onStart);
   $('btnRestart').addEventListener('click', onRestart);
   $('btnContinue').addEventListener('click', onContinue);
+  $('btnHome').addEventListener('click', onHome);
+  $('btnShare').addEventListener('click', onShare);
 }
 
 export function showTitle() {
   const d = Storage.data;
-  $('titleBest').textContent = d.bestScore > 0 ? `BEST ${d.bestScore} · 높이 ${d.bestHeight}` : '';
+  $('titleBest').textContent = d.bestScore > 0 ? `🏆 BEST ${d.bestScore}점 · ${d.bestHeight}칩` : '';
   $('titleStreak').textContent = d.streakDays >= 2 ? `🔥 ${d.streakDays}일 연속 플레이` : '';
   $('title').style.display = 'flex';
 }
 export function hideTitle() { $('title').style.display = 'none'; }
 
-export function showResult({ score, height, best, isNewBest, reason, canContinue, askNickname }) {
-  $('resultReason').textContent = reason;
+export function showResult({ score, height, isNewBest, canContinue, askNickname, perfectCount, maxCombo, zoneName }) {
   $('resultScore').textContent = score;
-  $('resultHeight').textContent = `높이 ${height}`;
-  $('resultBest').textContent = isNewBest ? '🏆 신기록!' : `BEST ${best}`;
+  $('resultCode').textContent = chipCode(height); // 칩 번호 = 쌓은 칩 개수 (수집 컨셉)
+  $('resultMeta').textContent = `${zoneName} · ${height}칩${isNewBest && score > 0 ? ' · 최고 기록!' : ''}`;
+  $('statPerfect').textContent = perfectCount;
+  $('statCombo').textContent = `x${maxCombo}`;
   $('btnContinue').style.display = canContinue ? 'block' : 'none';
   $('nickRow').style.display = askNickname ? 'flex' : 'none'; // 랭킹 참여용 닉네임 1회 등록
-  $('result').style.display = 'flex';
+  const el = $('result');
+  el.classList.remove('show');
+  el.style.display = 'flex';
+  void el.offsetHeight; // 리플로우 — 진입 모션(칩 드롭인 + 버튼 슬라이드) 재생
+  el.classList.add('show');
 }
 export function hideResult() { $('result').style.display = 'none'; }
+
+// ─── 화면 전환: 5색 칩 띠 와이프 (0.4s, 아래→위) ─────────
+let wiping = false;
+export function wipe(midCb) {
+  if (wiping) { midCb(); return; } // 진행 중 재호출 — 전환만 수행
+  const el = $('wipe');
+  wiping = true;
+  let done = false;
+  const toOut = () => {
+    if (done) return;
+    done = true;
+    midCb();
+    el.classList.remove('in');
+    el.classList.add('out');
+    setTimeout(() => { el.classList.remove('out'); wiping = false; }, 280);
+  };
+  const onEnd = () => { el.removeEventListener('transitionend', onEnd); toOut(); };
+  el.addEventListener('transitionend', onEnd);
+  el.classList.add('in');
+  setTimeout(toOut, 320); // transitionend 미발화 폴백
+}
 
 // ─── 랭킹 오버레이 ───────────────────────────────────────
 export function showBoard() { $('board').style.display = 'flex'; }
@@ -71,6 +100,8 @@ export function setBoardTab(range) {
 }
 
 export function renderBoardMessage(msg) {
+  $('podium').textContent = '';
+  $('myRow').textContent = '';
   const list = $('boardList');
   list.textContent = '';
   const div = document.createElement('div');
@@ -79,56 +110,122 @@ export function renderBoardMessage(msg) {
   list.appendChild(div);
 }
 
-/** rows: [{nickname, score, height}] — textContent 조립으로 XSS 차단 */
-export function renderBoard(rows, myNickname) {
-  const list = $('boardList');
-  list.textContent = '';
-  if (!rows || rows.length === 0) { renderBoardMessage(rows ? '아직 기록이 없습니다' : '랭킹을 불러오지 못했습니다'); return; }
-  rows.forEach((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'board-row' + (myNickname && r.nickname === myNickname ? ' me' : '');
-    const medal = ['🥇', '🥈', '🥉'][i];
-    const cells = [
-      ['rank', medal || String(i + 1)],
-      ['nick', r.nickname],
-      ['pts', String(r.score)],
-      ['ht', `h${r.height}`],
-    ];
-    for (const [cls, text] of cells) {
-      const el = document.createElement('span');
-      el.className = cls;
-      el.textContent = text;
-      row.appendChild(el);
-    }
-    list.appendChild(row);
-  });
+// 리스트 행 스와치: 그 기록의 마지막 칩 색 (높이 → 그라데이션, 앵커 0 고정 = 결정적)
+const swatchHex = (h) => oklchToHex(chipColor(Math.max(0, h - 1), 0));
+
+function boardRowEl(rank, r, my = false) {
+  const row = document.createElement('div');
+  row.className = 'board-row';
+  const cells = [
+    ['rank', String(rank)],
+    ['swatch', ''],
+    ['nick', my ? `나 (${r.nickname})` : r.nickname],
+    ['pts', `${r.score}점`],
+  ];
+  for (const [cls, text] of cells) {
+    const el = document.createElement('span');
+    el.className = cls;
+    el.textContent = text; // textContent 조립 — XSS 차단
+    if (cls === 'swatch') el.style.background = swatchHex(r.height);
+    row.appendChild(el);
+  }
+  return row;
 }
 
-// ─── 캔버스 HUD (스크린 공간) ────────────────────────────
-export function drawHUD(ctx, { score, height, best, combo, phaseName, textHex }) {
-  ctx.textAlign = 'center';
-  ctx.fillStyle = textHex;
-  ctx.font = '700 64px -apple-system, "Noto Sans KR", sans-serif';
-  ctx.fillText(String(score), P.W / 2, 110);
-  ctx.font = '500 26px -apple-system, "Noto Sans KR", sans-serif';
-  ctx.globalAlpha = 0.75;
-  ctx.fillText(`높이 ${height}   ·   BEST ${best}`, P.W / 2, 152);
-  ctx.fillText(phaseName, P.W / 2, 192);
-  ctx.globalAlpha = 1;
-  if (combo >= 2) {
-    ctx.font = '800 34px -apple-system, "Noto Sans KR", sans-serif';
-    ctx.fillText(`PERFECT ×${combo}`, P.W / 2, 240);
+/** rows: [{nickname, score, height}] — 포디움(1–3위 칩 타워) + 리스트(4위~) + 내 순위 고정 */
+export function renderBoard(rows, myNickname) {
+  const podium = $('podium'), list = $('boardList'), myRow = $('myRow');
+  podium.textContent = ''; list.textContent = ''; myRow.textContent = '';
+  if (!rows || rows.length === 0) { renderBoardMessage(rows ? '아직 기록이 없습니다' : '랭킹을 불러오지 못했습니다'); return; }
+
+  // 포디움: 배치 순서 2-1-3, 칩 높이 = 순위 (가이드: 겨자/청록/벽돌)
+  const spec = [
+    { i: 1, h: 74, bg: T.TEAL, fg: T.CREAM, fs: 28 },
+    { i: 0, h: 104, bg: T.MUSTARD, fg: T.INK, fs: 38, flag: true },
+    { i: 2, h: 56, bg: T.BRICK, fg: T.CREAM, fs: 24 },
+  ];
+  for (const s of spec) {
+    const r = rows[s.i];
+    if (!r) continue;
+    const pod = document.createElement('div');
+    pod.className = 'pod' + (s.i === 0 ? ' p1' : '');
+    const face = document.createElement('div');
+    face.className = 'pod-face';
+    face.style.height = `${s.h}px`;
+    face.style.background = s.bg;
+    if (s.flag) { const f = document.createElement('i'); f.className = 'pod-flag'; face.appendChild(f); }
+    const b = document.createElement('b');
+    b.textContent = String(s.i + 1);
+    b.style.color = s.fg; b.style.fontSize = `${s.fs}px`;
+    face.appendChild(b);
+    const label = document.createElement('div');
+    label.className = 'pod-label';
+    const nick = document.createElement('span');
+    nick.className = 'nick'; nick.textContent = r.nickname;
+    const code = document.createElement('span');
+    code.className = 'code'; code.textContent = `${chipCode(r.height)} · ${r.score}점`;
+    label.appendChild(nick); label.appendChild(code);
+    pod.appendChild(face); pod.appendChild(label);
+    podium.appendChild(pod);
   }
+
+  // 4위 이하 리스트
+  rows.slice(3).forEach((r, i) => list.appendChild(boardRowEl(i + 4, r)));
+
+  // 내 순위 — 하단 고정 (리스트에 있으면 순위째로, 없으면 숨김)
+  if (myNickname) {
+    const idx = rows.findIndex((r) => r.nickname === myNickname);
+    if (idx >= 0) myRow.appendChild(boardRowEl(idx + 1, rows[idx], true));
+  }
+}
+
+// ─── 캔버스 HUD (칩칩 가이드: 스티커 칩 스타일) ──────────
+// 좌: 점수 칩(CREAM, 점수 Rammetto + N칩 병기) / 우: 존 배지(TEAL, "서울 · 지상")
+function sticker(ctx, x, y, w, h, fill) {
+  ctx.fillStyle = T.INK; ctx.fillRect(x + 3, y + 3, w, h); // 하드 섀도
+  ctx.fillStyle = fill; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = T.INK; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h);
+}
+
+export function drawHUD(ctx, { score, height, zoneName }) {
+  // 점수 칩 (좌상단)
+  ctx.font = `40px ${T.F_DISPLAY}`;
+  const scoreW = Math.max(64, ctx.measureText(String(score)).width) + 76;
+  sticker(ctx, 22, 22, scoreW, 64, T.CREAM);
+  ctx.fillStyle = T.INK;
+  ctx.textAlign = 'left';
+  ctx.fillText(String(score), 40, 68);
+  ctx.font = `18px ${T.F_HEAD}`;
+  ctx.fillStyle = T.SUBTLE;
+  ctx.fillText(`${height}칩`, 40 + scoreW - 74, 66);
+
+  // 존 배지 (우상단)
+  ctx.font = `20px ${T.F_HEAD}`;
+  const zw = ctx.measureText(zoneName).width + 40;
+  sticker(ctx, P.W - 22 - zw, 22, zw, 46, T.TEAL);
+  ctx.fillStyle = T.CREAM;
+  ctx.textAlign = 'center';
+  ctx.fillText(zoneName, P.W - 22 - zw / 2, 53);
+}
+
+/** 튜토리얼 탭 힌트 (첫 3판) — 하단 중앙 */
+export function drawTapHint(ctx) {
+  ctx.font = `24px ${T.F_HEAD}`;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = T.INK;
+  ctx.fillText('화면을 터치해서 칩을 떨어뜨려요!', P.W / 2 + 2, P.H - 56 + 2);
+  ctx.fillStyle = T.CREAM;
+  ctx.fillText('화면을 터치해서 칩을 떨어뜨려요!', P.W / 2, P.H - 56);
 }
 
 // ─── 무게중심 인디케이터 (월드 공간 — 카메라 변환 내부에서 호출) ──
 // ratio: 0=중앙, 1=지지폭 끝. 0.6/0.85 경계로 회색→앰버→레드.
-export function drawCOMIndicator(ctx, sup, timeMs) {
+export function drawCOMIndicator(ctx, sup, timeMs, night = false) {
   if (!sup) return;
   let color, pulse = 0;
-  if (sup.ratio < 0.6) color = 'rgba(120,120,130,0.55)';
-  else if (sup.ratio < 0.85) color = 'rgba(228,160,50,0.8)';
-  else { color = 'rgba(225,60,60,0.9)'; pulse = Math.sin(timeMs / 70) * 1.5; }
+  if (sup.ratio < 0.6) color = night ? T.CREAM_60 : T.INK_40;
+  else if (sup.ratio < 0.85) color = T.MUSTARD;
+  else { color = T.ORANGE; pulse = Math.sin(timeMs / 70) * 1.5; }
 
   const x = sup.comX + pulse;
   ctx.strokeStyle = color;
@@ -152,37 +249,61 @@ export function drawCOMIndicator(ctx, sup, timeMs) {
   ctx.stroke();
 }
 
-// ─── 칩 렌더 (팬톤 칩 스타일: 컬러 블록 + 밝은 상단 에지 + 하단 라벨 밴드) ──
-// hex/edgeHex/bandHex/labelHex는 스폰 시 main.js가 캐시. desat>0(게임오버 탈색)일 때만 재계산.
-export function chipPalette(col) {
-  const { l, c, h } = col;
+// ─── 칩 렌더 (칩칩 가이드: 색면 + CREAM 라벨 + 3px INK 외곽선) ──────────
+// 92×72 — 색면 50px 위, 라벨 22px 아래. 라벨: `CC 0NN-C 한글색명` (번호 = 칩 순번).
+// 컬러는 기존 OKLCH 팬톤 그라데이션 유지(사용자 결정).
+export function chipPalette(col, n) {
   return {
     hex: oklchToHex(col),
-    edgeHex: oklchToHex({ l: Math.min(0.95, l + 0.06), c, h }),
-    bandHex: oklchToHex({ l: 0.92, c: 0.02, h }),
-    labelHex: oklchToHex({ l: 0.4, c: 0.03, h }),
+    label: `${chipCode(n + 1)} ${koreanColorName(col.h)}`,
   };
 }
 
-export function drawChip(ctx, chip, desat = 0) {
-  const b = chip.body, S = P.CHIP;
-  let pal = chip.pal;
-  if (desat > 0) {
-    const { l, c, h } = chip.col;
-    pal = chipPalette({ l, c: c + (0.03 - c) * desat, h }); // 색이 "죽는" 연출
-  }
+const HW = () => P.CHIP_W / 2, HH = () => P.CHIP_H / 2;
+const FACE_H = 50, LABEL_H = 22; // FACE_H + LABEL_H === P.CHIP_H
+
+export function drawChip(ctx, chip, { falling = false } = {}) {
+  const b = chip.body;
+  const hw = HW(), hh = HH();
   ctx.save();
   ctx.translate(b.position.x, b.position.y);
   ctx.rotate(b.angle);
-  ctx.fillStyle = pal.hex;
-  ctx.fillRect(-S / 2, -S / 2, S, S);
-  ctx.fillStyle = pal.edgeHex;
-  ctx.fillRect(-S / 2, -S / 2, S, 6);
-  ctx.fillStyle = pal.bandHex;
-  ctx.fillRect(-S / 2, S / 2 - 14, S, 14);
-  ctx.fillStyle = pal.labelHex;
-  ctx.font = '600 9px "Helvetica Neue", sans-serif';
+
+  // 착지 스쿼시 (렌더 전용 — chip.landedAt은 main.js가 기록)
+  if (chip.landedAt) {
+    const age = performance.now() - chip.landedAt;
+    if (age < 180) {
+      const t = age / 180; // 0→1, ease-out 복원
+      const e = 1 - (1 - t) * (1 - t);
+      ctx.scale(1.10 + (1 - 1.10) * e, 0.88 + (1 - 0.88) * e);
+    }
+  }
+
+  // 낙하 중 하드 섀도 (가이드: 4px 4px 0 INK 35%)
+  if (falling) {
+    ctx.fillStyle = T.INK_35;
+    ctx.fillRect(-hw + 4, -hh + 4, P.CHIP_W, P.CHIP_H);
+  }
+  // 색면
+  ctx.fillStyle = chip.pal.hex;
+  ctx.fillRect(-hw, -hh, P.CHIP_W, FACE_H);
+  // CREAM 라벨
+  ctx.fillStyle = T.CREAM;
+  ctx.fillRect(-hw, -hh + FACE_H, P.CHIP_W, LABEL_H);
+  // 색면/라벨 구분선 + 외곽선 (3px INK, 몸체 안쪽 정렬)
+  ctx.strokeStyle = T.INK;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(-hw, -hh + FACE_H);
+  ctx.lineTo(hw, -hh + FACE_H);
+  ctx.stroke();
+  ctx.strokeRect(-hw + 1.5, -hh + 1.5, P.CHIP_W - 3, P.CHIP_H - 3);
+  // 라벨 텍스트
+  ctx.fillStyle = T.INK;
+  ctx.font = `500 9px ${T.F_MONO}`;
   ctx.textAlign = 'left';
-  ctx.fillText(`CHROMA ${String(chip.n + 1).padStart(3, '0')}`, -S / 2 + 5, S / 2 - 4);
+  ctx.textBaseline = 'middle';
+  ctx.fillText(chip.pal.label, -hw + 8, -hh + FACE_H + LABEL_H / 2 + 1);
+  ctx.textBaseline = 'alphabetic';
   ctx.restore();
 }
