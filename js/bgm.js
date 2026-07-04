@@ -73,11 +73,18 @@ export const Bgm = {
 
   setEnabled(on) {
     this.enabled = on;
-    localStorage.setItem(LS_KEY, on ? '1' : '0');
+    try { localStorage.setItem(LS_KEY, on ? '1' : '0'); } catch { /* 무시 */ }
+    if (!this.ctx) return;
+    // 언뮤트: 컨텍스트가 잠들어 있으면 깨우고, 소스가 죽었으면 재기동 (사파리/iOS 인터럽트 대응)
+    if (on && this.ctx.state !== 'running') { try { this.ctx.resume(); } catch { /* */ } }
+    if (on && !this.src && this.buffers.main) this.play('main');
     if (this.gain) {
       const t = this.ctx.currentTime;
+      const cur = this.gain.gain.value;
       this.gain.gain.cancelScheduledValues(t);
-      this.gain.gain.linearRampToValueAtTime(on ? VOLUME : 0, t + 0.3);
+      this.gain.gain.setValueAtTime(cur, t); // 램프 앵커 — 없으면 브라우저별 동작 불일치
+      this.gain.gain.linearRampToValueAtTime(on ? VOLUME : 0.0001, t + 0.3);
+      this.gain.gain.setValueAtTime(on ? VOLUME : 0, t + 0.32); // 최종값 확정 스냅
     }
   },
 };
