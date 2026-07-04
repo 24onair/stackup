@@ -73,7 +73,7 @@ let chips = [];          // 착지 순 [{body, n, col, pal, frozen, fallen, fall
 let currentChip = null;  // 낙하 중(SETTLE)인 칩
 let mover = null;        // 조준 중인 키네마틱 칩
 let startAnchor = randomStartIndex();
-let score = 0, height = 0, combo = 0, continueUsed = false, newBestShown = false;
+let score = 0, height = 0, combo = 0, newBestShown = false;
 let gameOverReason = '';
 let settle = { frames: 0, elapsed: 0 };
 let toppleTimer = 0;
@@ -342,29 +342,13 @@ function gameOver(reason) {
   if (Storage.data.nickname) Leaderboard.submit(Storage.data.nickname, score, height); // 비동기, 실패 무시
 }
 
-function doContinue() {
-  continueUsed = true;
-  for (const c of chips) {
-    if (c.fallen) { Matter.Composite.remove(world, c.body); continue; }
-    Matter.Body.setStatic(c.body, true); // 생존 타워 전체 동결 — 컨티뉴 직후 재붕괴 방지
-    c.frozen = true; c.fallenMs = 0;
-  }
-  chips = chips.filter((c) => !c.fallen);
-  shakeAmp = 0;
-  cam.targetZoom = 1; cam.zoom = 1;
-  Bgm.duck(1);
-  hideResult();
-  spawnMover();
-  state = 'AIM';
-}
-
 function resetRun(startHeight = DEBUG_START_HEIGHT) {
   for (const c of chips) Matter.Composite.remove(world, c.body);
   if (currentChip) Matter.Composite.remove(world, currentChip.body);
   chips = []; currentChip = null; mover = null;
   score = 0; height = 0; combo = 0;
   perfectCount = 0; maxCombo = 0;
-  continueUsed = false; newBestShown = false;
+  newBestShown = false;
   shakeAmp = 0; camDip = 0;
   slowmo.t = 0;
   popups = []; rings = []; stamps = []; floorHits.length = 0;
@@ -406,7 +390,6 @@ initOverlays({
     const go = () => wipe(() => { hideResult(); resetRun(); }); // 광고 먼저 → 와이프
     if (Ads.canShowInterstitial()) Ads.showInterstitial(go); else go();
   },
-  onContinue: () => Ads.showRewarded(doContinue, () => { /* 중도 이탈 시 결과 화면 유지 */ }),
   onHome: () => wipe(() => { hideResult(); toTitle(); }),
   onShare: shareRecord,
 });
@@ -575,7 +558,6 @@ function updateJuice(rawDt) {
       showResult({
         score, height,
         isNewBest: score >= d.bestScore && score > 0,
-        canContinue: !continueUsed && height > 0,
         askNickname: Leaderboard.enabled && !d.nickname && score > 0,
         perfectCount, maxCombo,
         zoneName: T.ZONE_NAMES[zoneIndex(height)],

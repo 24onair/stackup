@@ -37,10 +37,9 @@ export const Storage = {
 // ─── DOM 오버레이 ────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 
-export function initOverlays({ onStart, onRestart, onContinue, onHome, onShare }) {
+export function initOverlays({ onStart, onRestart, onHome, onShare }) {
   $('btnStart').addEventListener('click', onStart);
   $('btnRestart').addEventListener('click', onRestart);
-  $('btnContinue').addEventListener('click', onContinue);
   $('btnHome').addEventListener('click', onHome);
   $('btnShare').addEventListener('click', onShare);
 }
@@ -53,13 +52,12 @@ export function showTitle() {
 }
 export function hideTitle() { $('title').style.display = 'none'; }
 
-export function showResult({ score, height, isNewBest, canContinue, askNickname, perfectCount, maxCombo, zoneName }) {
+export function showResult({ score, height, isNewBest, askNickname, perfectCount, maxCombo, zoneName }) {
   $('resultScore').textContent = score;
   $('resultCode').textContent = chipCode(height); // 칩 번호 = 쌓은 칩 개수 (수집 컨셉)
   $('resultMeta').textContent = `${zoneName} · ${height}칩${isNewBest && score > 0 ? ' · 최고 기록!' : ''}`;
   $('statPerfect').textContent = perfectCount;
   $('statCombo').textContent = `x${maxCombo}`;
-  $('btnContinue').style.display = canContinue ? 'block' : 'none';
   $('nickRow').style.display = askNickname ? 'flex' : 'none'; // 랭킹 참여용 닉네임 1회 등록
   const el = $('result');
   el.classList.remove('show');
