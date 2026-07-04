@@ -105,6 +105,7 @@ document.addEventListener('visibilitychange', () => {
   else AC.resume();
 });
 function tone(freq, dur = 0.1, type = 'sine', gain = 0.12, slideTo = null, delay = 0) {
+  if (!Bgm.enabled) return; // 마스터 뮤트 — 효과음도 함께
   try {
     const a = audio(), t = a.currentTime + delay;
     const o = a.createOscillator(), g = a.createGain();
@@ -120,6 +121,7 @@ function tone(freq, dur = 0.1, type = 'sine', gain = 0.12, slideTo = null, delay
 // 노이즈 스윕 — 휘익/굉음/러블 계열의 긴장 사운드용
 let noiseBuf = null;
 function noiseSweep({ from = 1200, to = 200, dur = 0.3, gain = 0.15, q = 1, delay = 0 }) {
+  if (!Bgm.enabled) return; // 마스터 뮤트 — 효과음도 함께
   try {
     const a = audio(), t = a.currentTime + delay;
     if (!noiseBuf) {
@@ -769,7 +771,7 @@ btnSound?.addEventListener('click', () => {
 });
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-04c'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-04d'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 syncSoundBtn();

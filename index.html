@@ -194,7 +194,7 @@
 
   /* ── 사운드 버튼 (스티커) ── */
   #btnSound {
-    position: absolute; top: 6.5%; right: 12px; z-index: 10;
+    position: absolute; top: 6.5%; right: 12px; z-index: 30; /* 오버레이(20) 위, 와이프(40) 아래 */
     width: 44px; height: 44px; padding: 0;
     font-size: 19px; line-height: 40px;
     border-width: 2px; box-shadow: 3px 3px 0 #33261A;
@@ -219,7 +219,7 @@
 <body>
   <div id="wrap">
     <canvas id="game"></canvas>
-    <button id="btnSound" aria-label="배경음악 켜기/끄기">🔊</button>
+    <button id="btnSound" aria-label="사운드 켜기/끄기">🔊</button>
 
     <!-- 타이틀 -->
     <div id="title" class="overlay">
