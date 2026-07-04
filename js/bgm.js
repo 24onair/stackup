@@ -22,7 +22,7 @@ export const Bgm = {
 
   /** 첫 유저 제스처에서 호출 — AudioContext를 공유받아 초기화 후 메인 루프 재생 */
   async start(ctx) {
-    if (this.ctx) { this.play('main'); return; }
+    if (this.ctx) { if (this.enabled) this.play('main'); return; }
     this.ctx = ctx;
     this.gain = ctx.createGain();
     this.duckGain = ctx.createGain();
@@ -30,7 +30,7 @@ export const Bgm = {
     this.duckGain.connect(this.gain);
     this.gain.connect(ctx.destination);
     await this._load('main');
-    this.play('main');
+    if (this.enabled) this.play('main'); // 뮤트 상태면 소스를 만들지 않음 (버퍼만 준비)
   },
 
   async _load(name) {
@@ -71,20 +71,31 @@ export const Bgm = {
     this.duckGain.gain.linearRampToValueAtTime(factor, t + sec);
   },
 
+  // 인앱 브라우저(카카오톡 등 WKWebView/WebView)에서 게인 램프·무음 유지 소스가
+  // 잘 깨지므로, 뮤트 = 소스 정지 / 언뮤트 = 사용자 제스처 안에서 새 소스 재생으로 처리.
   setEnabled(on) {
     this.enabled = on;
     try { localStorage.setItem(LS_KEY, on ? '1' : '0'); } catch { /* 무시 */ }
     if (!this.ctx) return;
-    // 언뮤트: 컨텍스트가 잠들어 있으면 깨우고, 소스가 죽었으면 재기동 (사파리/iOS 인터럽트 대응)
-    if (on && this.ctx.state !== 'running') { try { this.ctx.resume(); } catch { /* */ } }
-    if (on && !this.src && this.buffers.main) this.play('main');
-    if (this.gain) {
-      const t = this.ctx.currentTime;
-      const cur = this.gain.gain.value;
-      this.gain.gain.cancelScheduledValues(t);
-      this.gain.gain.setValueAtTime(cur, t); // 램프 앵커 — 없으면 브라우저별 동작 불일치
-      this.gain.gain.linearRampToValueAtTime(on ? VOLUME : 0.0001, t + 0.3);
-      this.gain.gain.setValueAtTime(on ? VOLUME : 0, t + 0.32); // 최종값 확정 스냅
+    const t = this.ctx.currentTime;
+    if (on) {
+      if (this.ctx.state !== 'running') { try { this.ctx.resume(); } catch { /* */ } }
+      if (this.gain) {
+        this.gain.gain.cancelScheduledValues(t);
+        this.gain.gain.setValueAtTime(VOLUME, t);
+      }
+      if (this.duckGain) {
+        this.duckGain.gain.cancelScheduledValues(t);
+        this.duckGain.gain.setValueAtTime(1, t);
+      }
+      this.stop();
+      this.play('main'); // 제스처 컨텍스트 안에서 새 소스 시작 (버퍼 미로드 시 no-op → start()가 처리)
+    } else {
+      if (this.gain) {
+        this.gain.gain.cancelScheduledValues(t);
+        this.gain.gain.setValueAtTime(0, t);
+      }
+      this.stop(); // 무음 소스를 유지하지 않음 — WebView 절전/인터럽트 쿼크 회피
     }
   },
 };
