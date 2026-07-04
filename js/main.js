@@ -699,6 +699,7 @@ window.__CHROMA = {
   get mover() { return mover; },
   get cam() { return cam; },
   get adDebug() { return Ads.debugState; },
+  get ads() { return Ads; },
   get bgm() { return { current: Bgm.current, enabled: Bgm.enabled, loaded: Object.keys(Bgm.buffers) }; },
   drop,
   forceGameOver: () => gameOver('디버그 게임오버'),
