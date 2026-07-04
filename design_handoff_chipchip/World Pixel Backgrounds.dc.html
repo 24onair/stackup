@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8DCC4; }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans KR', sans-serif; color: #33261A; display: flex; flex-direction: column; align-items: center; padding: 48px 24px 96px;">
+<div style="width: 1380px; max-width: 100%; display: flex; flex-direction: column; gap: 40px;">
+
+  <section style="background: #F3E9D7; border: 3px solid #33261A; box-shadow: 8px 8px 0 #33261A; padding: 32px 44px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="background: #E4572E; color: #FBF4E6; font-family: 'Jua', sans-serif; font-size: 15px; padding: 4px 14px; border: 2px solid #33261A;">월드 스테이지</span>
+      <span style="font-family: 'Rammetto One', cursive; font-size: 14px; color: #A93B2A;">CHIP! CHIP! 칩칩!</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 36px; font-weight: 400;">픽셀아트 배경 — 6개 도시</h1>
+    <p style="margin: 0; font-size: 15px; color: #55452F;">공통 규격 144×576 도트(5배 확대 720×2880) · 지상 → 스카이라인 → 하늘 → 성층권 · 성층권은 전 스테이지 공통</p>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px;">
+    <sc-for list="{{ cities }}" as="ct" hint-placeholder-count="6">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-family: 'Jua', sans-serif; font-size: 18px;">{{ ct.kr }}</span>
+          <span style="font-family: 'Rammetto One', cursive; font-size: 11px; color: #A93B2A;">{{ ct.en }}</span>
+        </div>
+        <div role="img" aria-label="{{ ct.kr }} 픽셀아트 배경" style="border: 3px solid #33261A; box-shadow: 5px 5px 0 #33261A; aspect-ratio: 1 / 4; background-image: url('{{ ct.src }}'); background-size: 100% 100%; image-rendering: pixelated;"></div>
+        <div style="font-size: 12px; line-height: 1.6; color: #55452F;">{{ ct.desc }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+    <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-family: 'Jua', sans-serif; font-size: 17px;">공통 규칙</div>
+      <div style="font-size: 13.5px; line-height: 1.8; color: #55452F;">· 성층권(71칩+)은 전 도시 동일 — 초승달, 별, 유성, 브랜드 위성 CC-SAT<br>· 하늘(41-70칩)은 공통 구름 + 도시별 액센트 1개(열기구/새/고이노보리/비행선)<br>· 스카이라인 배경은 도시 시그니처 1색, 채도 30% 이하<br>· 지상 중앙(화면폭 40%)은 칩 스택 영역으로 비움 · 모든 오브젝트 1px INK 외곽선</div>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-family: 'Jua', sans-serif; font-size: 17px;">적용 방법</div>
+      <div style="font-size: 13.5px; line-height: 1.8; color: #55452F;">· <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">image-rendering: pixelated</span> + 정수배 확대 필수<br>· 화면폭 100%로 깔고 chipCount에 비례해 세로 스크롤 (0칩 = 맨 아래)<br>· 여력 시 원경/중경/근경 3레이어 분리 → 0.3x / 0.6x / 1x 패럴랙스<br>· 파일: assets/{seoul·paris·cairo·tokyo·newyork·london}-bg-pixel.png</div>
+    </div>
+  </div>
+
+  <div style="text-align: center; font-size: 13px; color: #8a7660;">CHIP! CHIP! 칩칩! — 월드 스테이지 픽셀아트 배경 v1</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1440}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      cities: [
+        { kr: '서울', en: 'SEOUL', src: 'assets/seoul-bg-pixel.png', desc: '광화문 · 은행나무 · 분식 포장마차 / 63빌딩 · 롯데타워 · 남산타워 · 한강 다리 / 방패연 · 열기구' },
+        { kr: '파리', en: 'PARIS', src: 'assets/paris-bg-pixel.png', desc: '카페 차양 · 꽃수레 / 에펠탑 · 개선문 · 오스만 건물 · 센 강 / 로즈 그레이 노을 · 열기구' },
+        { kr: '카이로', en: 'CAIRO', src: 'assets/cairo-bg-pixel.png', desc: '오벨리스크 · 야자수 · 시장 천막 · 물항아리 / 피라미드 2기 · 스핑크스 · 나일 강 펠루카 돛단배' },
+        { kr: '도쿄', en: 'TOKYO', src: 'assets/tokyo-bg-pixel.png', desc: '도리이 · 벚나무 · 라멘 포장마차 / 후지산 · 오층탑 · 도쿄타워 / 고이노보리 잉어 깃발' },
+        { kr: '뉴욕', en: 'NEW YORK', src: 'assets/newyork-bg-pixel.png', desc: '핫도그 카트 · 소화전 / 자유의 여신상 · 엠파이어 스테이트 · 브루클린 브리지 / 비행선' },
+        { kr: '런던', en: 'LONDON', src: 'assets/london-bg-pixel.png', desc: '공중전화 부스 · 우체통 / 빅벤 · 런던아이 · 타워브리지 · 템스 강 / 안개빛 하늘 · 열기구' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

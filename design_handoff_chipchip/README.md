@@ -138,7 +138,7 @@
 - 튜토리얼 노출 카운트 (첫 3회)
 
 ## Assets
-- **`assets/seoul-bg-pixel.png`** — 서울 스테이지 픽셀아트 배경 (720×2880, 원본 144×576 도트의 5배 확대). 세로 스트립 1장에 지상→스카이라인→하늘→성층권 4개 구간이 이어짐. 적용 방법:
+- **`assets/*-bg-pixel.png`** — 스테이지 픽셀아트 배경 6종 (각 720×2880, 원본 144×576 도트의 5배 확대): `seoul` `paris` `cairo` `tokyo` `newyork` `london`. 세로 스트립 1장에 지상→스카이라인→하늘→성층권 4개 구간이 이어지며, 성층권 구간은 전 도시 동일. 적용 방법:
   - 반드시 `image-rendering: pixelated`(CSS) 또는 nearest-neighbor 필터로 렌더링, 확대는 정수배만
   - 화면폭에 맞춰 가로 100%로 깔고, `chipCount`에 비례해 세로 스크롤 위치를 위로 이동 (0칩 = 이미지 맨 아래, 최고 고도 = 맨 위)
   - 이 이미지는 통합 레퍼런스 1장 — 여력이 되면 원경(하늘·해·달·별)/중경(빌딩·구름)/근경(지상 오브젝트·다리)으로 레이어를 분리해 0.3x/0.6x/1x 패럴랙스 적용
@@ -146,5 +146,8 @@
 - 로고: 워드마크 "CHIP! CHIP!"(Rammetto One, 오렌지+INK 하드섀도) + "칩칩!"(Jua) + 칩 3개 계단 아이콘. 앱 아이콘은 칩 1개 전면 배치
 
 ## Files
-- `CHIPCHIP Design Guide.dc.html` — 전체 브랜드/UI 가이드 (네이밍, 로고, 컬러, 타이포, 플레이/결과 화면 목업, 모션·사운드)
+- `CHIPCHIP Design Guide.dc.html` — 전체 브랜드/UI 가이드 (네이밍, 로고, 컬러, 타이포, 플레이/결과/랭킹 화면 목업, 모션·사운드)
 - `Seoul Altitude Scroll.dc.html` — 서울 스테이지 고도별 스크롤 구간 상세 설계
+- `Seoul Pixel Background.dc.html` — 서울 픽셀 배경 제작 스펙 + 폰 뷰 미리보기
+- `World Pixel Backgrounds.dc.html` — 6개 도시 픽셀 배경 비교 + 적용 규칙
+- `assets/` — 스테이지 배경 PNG 6종 (seoul·paris·cairo·tokyo·newyork·london)

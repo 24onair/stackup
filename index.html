@@ -80,6 +80,32 @@
   }
   .stat-badge:empty { display: none; }
 
+  /* ── 도시(스테이지) 선택기 ── */
+  .city-label { font-family: 'Jua', sans-serif; font-size: 15px; color: #55452F; margin-top: 4px; }
+  #citySelect {
+    display: flex; gap: 10px; overflow-x: auto; max-width: 94%;
+    padding: 4px 4px 10px; -webkit-overflow-scrolling: touch;
+  }
+  .city-card {
+    flex: 0 0 auto; padding: 0; border: 3px solid #33261A; border-radius: 0;
+    background: #FBF4E6; box-shadow: 3px 3px 0 #33261A;
+    display: flex; flex-direction: column; align-items: stretch; overflow: hidden;
+  }
+  .city-card.sel { border-color: #E4572E; box-shadow: 3px 3px 0 #E4572E; }
+  .city-card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #33261A; }
+  .city-thumb {
+    width: 104px; height: 116px; display: block;
+    background-repeat: no-repeat; background-size: 104px auto;
+    background-position: 0 -200px;                    /* 스카이라인 상징 건물 + 강 밴드로 크롭 */
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    border-bottom: 3px solid #33261A;
+  }
+  .city-name {
+    font-family: 'Jua', sans-serif; font-size: 15px; color: #33261A;
+    padding: 5px 0; text-align: center;
+  }
+  .city-card.sel .city-name { color: #E4572E; }
+
   /* ── 결과 화면 (오렌지 풀블리드 + 결과칩 카드) ── */
   #result { background: #E4572E; gap: 14px; }
   .r-title {
@@ -239,6 +265,8 @@
       <div class="tagline">한 번의 터치로 쌓는 컬러의 탑</div>
       <div id="titleBest" class="stat-badge"></div>
       <div id="titleStreak" class="stat-badge"></div>
+      <div class="city-label">어느 도시에 쌓을까요?</div>
+      <div id="citySelect"></div>
       <button id="btnStart" class="btn-big">쌓아 볼까?</button>
       <button id="btnBoardTitle" class="btn-teal">🏆 랭킹</button>
     </div>

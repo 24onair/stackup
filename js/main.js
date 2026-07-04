@@ -6,7 +6,7 @@ import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, dr
 import { Ads } from './ads.js';
 import { Bgm } from './bgm.js';
 import { Leaderboard } from './leaderboard.js';
-import { T, loadFonts, zoneIndex } from './theme.js';
+import { T, loadFonts, zoneIndex, zoneName, STAGES, stageById, stageAsset } from './theme.js';
 import { Bg } from './bg.js';
 
 // ─── 게임플레이 튜닝 상수 ────────────────────────────────
@@ -84,6 +84,7 @@ const slowmo = { t: 0, scale: 1 };
 let shakeAmp = 0, camDip = 0;
 let perfectCount = 0, maxCombo = 0;
 let showTapHint = false;
+let stageName = '서울'; // 현재 도시 이름 (HUD/결과 존 배지) — 부팅 시 저장값으로 설정
 let popups = [], rings = [], stamps = [];
 let lastCreakAt = -Infinity, lastBeatAt = -Infinity;
 
@@ -562,7 +563,7 @@ function updateJuice(rawDt) {
         isNewBest: score >= d.bestScore && score > 0,
         askNickname: Leaderboard.enabled && !d.nickname && score > 0,
         perfectCount, maxCombo,
-        zoneName: T.ZONE_NAMES[zoneIndex(height)],
+        zoneName: zoneName(stageName, zoneIndex(height)),
       });
     }
   }
@@ -674,7 +675,7 @@ function render(nowMs) {
 
   // HUD (스크린 공간)
   if (state !== 'TITLE') {
-    drawHUD(ctx, { score, height, zoneName: T.ZONE_NAMES[zoneIndex(height)] });
+    drawHUD(ctx, { score, height, zoneName: zoneName(stageName, zoneIndex(height)) });
     // 튜토리얼 탭 힌트 (첫 3판, 첫 드롭 전까지)
     if (showTapHint && state === 'AIM') drawTapHint(ctx);
   }
@@ -764,6 +765,40 @@ function initBoardUI() {
   });
 }
 
+// ─── 도시(스테이지) 선택기 ───────────────────────────────
+function applyStage(id) {
+  const s = stageById(id);
+  stageName = s.name;
+  Storage.data.stage = s.id;
+  Storage.save();
+  Bg.setStage(s.id);
+}
+
+function initCitySelect() {
+  const wrap = document.getElementById('citySelect');
+  if (!wrap) return;
+  const cur = stageById(Storage.data.stage).id;
+  wrap.textContent = '';
+  for (const s of STAGES) {
+    const card = document.createElement('button');
+    card.className = 'city-card' + (s.id === cur ? ' sel' : '');
+    card.dataset.stage = s.id;
+    const thumb = document.createElement('span');
+    thumb.className = 'city-thumb';
+    thumb.style.backgroundImage = `url(${stageAsset(s.id)})`;
+    const name = document.createElement('span');
+    name.className = 'city-name';
+    name.textContent = s.name;
+    card.appendChild(thumb);
+    card.appendChild(name);
+    card.addEventListener('click', () => {
+      applyStage(s.id);
+      wrap.querySelectorAll('.city-card').forEach((c) => c.classList.toggle('sel', c === card));
+    });
+    wrap.appendChild(card);
+  }
+}
+
 // ─── BGM 음소거 토글 ─────────────────────────────────────
 const btnSound = document.getElementById('btnSound');
 function syncSoundBtn() { if (btnSound) btnSound.textContent = Bgm.enabled ? '🔊' : '🔇'; }
@@ -774,11 +809,14 @@ btnSound?.addEventListener('click', () => {
 });
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-04h'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-05a'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
+stageName = stageById(Storage.data.stage).name;
+Bg.setStage(Storage.data.stage);
 syncSoundBtn();
 initBoardUI();
+initCitySelect();
 Bg.onZoneUp = () => Sfx.zoneUp(); // 존 전환 토스트와 동기된 상승 글리산도
 showTitle();
 // 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 병렬 로드.

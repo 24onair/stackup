@@ -7,7 +7,7 @@ import { T, chipCode, koreanColorName } from './theme.js';
 const LS_KEY = 'chromaStack.v1';
 
 export const Storage = {
-  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0, nickname: '' },
+  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0, nickname: '', stage: 'seoul' },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem(LS_KEY) || '{}')); } catch { /* 무시 */ }
     return this.data;

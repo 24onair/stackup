@@ -11,11 +11,11 @@ export const T = {
   INK_30: 'rgba(51,38,26,0.3)', INK_35: 'rgba(51,38,26,0.35)', INK_40: 'rgba(51,38,26,0.4)',
   CREAM_30: 'rgba(251,244,230,0.35)', CREAM_60: 'rgba(251,244,230,0.6)',
   SUBTLE: '#6b5947',
-  // 존 배경색 (Seoul Altitude Scroll)
+  // 존 배경색 (로드 전 폴백 / HUD 밤 전환 판정용 — 실제 배경은 도시별 픽셀 스트립)
   ZONE_BG: ['#EFE3CB', '#EAD9B4', '#D9E0D3', '#33261A'],
-  ZONE_NAMES: ['서울 · 지상', '서울 · 스카이라인', '서울 · 하늘', '서울 · 성층권'],
+  ZONE_SUFFIX: ['지상', '스카이라인', '하늘', '성층권'],
   ZONE_BOUNDS: [16, 41, 71],              // 이 높이(칩)부터 다음 존
-  ZONE_TOASTS: ['한강을 건넜어요!', '서울 하늘 위로!', '서울 밤하늘을 넘었어요!'],
+  ZONE_TOASTS: ['하늘로 올라가요!', '구름 위로!', '밤하늘을 넘었어요!'], // 전 도시 공통(도시 무관 문구)
   // 배경 오브젝트 페이퍼 톤 (채도 30% 이하)
   BG_TAN: '#C9B592', BG_TAN2: '#B3A07E', BG_GOLD: '#C9A84C', BASKET: '#C29B5F',
   GROUND: '#6E7F3C',
@@ -24,6 +24,21 @@ export const T = {
   F_HEAD: '"Jua", "IBM Plex Sans KR", sans-serif',        // 한글 헤드라인
   F_MONO: '"IBM Plex Mono", monospace',                   // 칩 코드 라벨
 };
+
+// 스테이지(도시) — 배경 픽셀 스트립 6종. 성층권 구간은 전 도시 공통. 기본 서울.
+export const STAGES = [
+  { id: 'seoul',   name: '서울',   en: 'SEOUL' },
+  { id: 'tokyo',   name: '도쿄',   en: 'TOKYO' },
+  { id: 'paris',   name: '파리',   en: 'PARIS' },
+  { id: 'london',  name: '런던',   en: 'LONDON' },
+  { id: 'newyork', name: '뉴욕',   en: 'NEW YORK' },
+  { id: 'cairo',   name: '카이로', en: 'CAIRO' },
+];
+export const stageById = (id) => STAGES.find((s) => s.id === id) || STAGES[0];
+export const stageAsset = (id) => `assets/${stageById(id).id}-bg-pixel.png`;
+
+/** HUD/결과 존 배지 문구 — "서울 · 스카이라인" */
+export function zoneName(cityName, zoneIdx) { return `${cityName} · ${T.ZONE_SUFFIX[zoneIdx]}`; }
 
 /** 칩 번호 포맷 — 가이드의 "점수=수집한 색" 시스템 (번호는 높이/순번 연동) */
 export const chipCode = (n) => `CC ${String(Math.max(0, Math.min(999, n))).padStart(3, '0')}-C`;

@@ -3,7 +3,7 @@
 // 가이드 규칙: nearest-neighbor(픽셀 유지), 가로 100%, chipCount 비례 세로 스크롤
 // (0칩 = 이미지 맨 아래, 최고 고도 = 맨 위). 존 색 페이드/토스트는 기존 높이 로직 유지.
 import { P } from './physics.js';
-import { T } from './theme.js';
+import { T, stageAsset } from './theme.js';
 
 const CH = () => P.CHIP_H;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -19,8 +19,9 @@ const ALT_TOP = 90;                      // 이 고도에서 이미지 최상단
 const SCRIM_ALPHA = 0.3;                 // 배경 흐림 30% — 낙하 칩 가독성
 const strip = new Image();
 let stripReady = false;
+let stageId = 'seoul';
 strip.onload = () => { stripReady = true; };
-strip.src = 'assets/seoul-bg-pixel.png';
+strip.src = stageAsset(stageId); // 기본 서울 — main.js가 저장된 스테이지로 교체
 
 // ─── 존 색 (이미지 로드 전 폴백 + HUD 밤 전환 판정) ──────
 function hexRgb(hex) { const n = parseInt(hex.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
@@ -44,21 +45,27 @@ const state = {
 export const Bg = {
   onZoneUp: null, // 존 전환 사운드 훅 (main.js가 연결)
 
+  /** 도시 스테이지 배경 교체 (기하는 전 도시 동일 720×2880) */
+  setStage(id) {
+    if (id === stageId && stripReady) return;
+    stageId = id;
+    stripReady = false;
+    strip.src = stageAsset(id);
+  },
+  get stage() { return stageId; },
+
   /** 존 판정용 고도(칩) — 카메라 기준 + 시작 오프셋 보정 */
   altOf(camY) { return Math.max(0, -camY / CH() + ALT_START); },
   isNight(camY) { return this.altOf(camY) > 68; },
 
   snap(camY) { state.cur = targetColor(this.altOf(camY)).slice(); },
 
-  /** land()에서 호출 — 존 경계/랜드마크 토스트 트리거 */
+  /** land()에서 호출 — 존 경계 축하 토스트 트리거 (전 도시 공통) */
   notifyHeight(h) {
-    const msgs = {
-      16: T.ZONE_TOASTS[0], 41: T.ZONE_TOASTS[1], 71: T.ZONE_TOASTS[2],
-      20: '남산타워!', 28: '63빌딩!', 38: '롯데타워!',
-    };
+    const msgs = { 16: T.ZONE_TOASTS[0], 41: T.ZONE_TOASTS[1], 71: T.ZONE_TOASTS[2] };
     if (msgs[h]) {
-      state.toast = { text: msgs[h], start: performance.now(), zone: [16, 41, 71].includes(h) };
-      if (state.toast.zone && this.onZoneUp) this.onZoneUp();
+      state.toast = { text: msgs[h], start: performance.now(), zone: true };
+      if (this.onZoneUp) this.onZoneUp();
     }
     if (h >= 71 && h % 10 === 0) state.meteor = { start: performance.now() };
   },
