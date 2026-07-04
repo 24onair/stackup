@@ -2,8 +2,8 @@
 // 아래 두 상수가 비어 있으면 랭킹 기능 전체가 조용히 비활성화된다 (게임은 정상 동작).
 // anon 키는 공개 전제의 키 — 권한은 Supabase RLS 정책이 제한한다.
 
-const SUPABASE_URL = '';       // 예: 'https://xxxx.supabase.co'
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL = 'https://tmuywafzvytcpyqotyjt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtdXl3YWZ6dnl0Y3B5cW90eWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMzYwMzEsImV4cCI6MjA5ODcxMjAzMX0.HhO0yDksItfE4tH709-OgjPyfRtj-pzwdyb-Lp9cvpk';
 
 const CACHE_MS = 30_000;
 const RANGES = {

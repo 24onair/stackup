@@ -332,10 +332,97 @@
     </div>
   </section>
 
-  <!-- ============ 07 STAGE / BACKGROUND SYSTEM ============ -->
-  <section data-screen-label="스테이지 배경 시스템" style="display: flex; flex-direction: column; gap: 28px;">
+  <!-- ============ 07 RANKING SCREEN ============ -->
+  <section data-screen-label="랭킹 화면" style="display: flex; flex-direction: column; gap: 28px;">
     <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
       <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">07</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">랭킹 화면</h2>
+      <span style="font-size: 15px; color: #6b5947;">"순위표도 결국 칩을 쌓는 일"</span>
+    </div>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div style="width: 340px; flex-shrink: 0; background: #33261A; border-radius: 44px; padding: 12px; box-shadow: 10px 10px 0 rgba(51,38,26,0.25);">
+        <div style="border-radius: 34px; overflow: hidden; position: relative; height: 690px; background: #F3E9D7; display: flex; flex-direction: column; padding: 22px 18px 16px; box-sizing: border-box; gap: 14px;">
+          <!-- header -->
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="width: 34px; height: 34px; background: #FBF4E6; border: 2px solid #33261A; box-shadow: 2px 2px 0 #33261A; display: flex; align-items: center; justify-content: center; font-family: 'Rammetto One', cursive; font-size: 15px;">&lt;</div>
+            <div style="font-family: 'Jua', sans-serif; font-size: 24px;">랭킹</div>
+            <div style="width: 34px;"></div>
+          </div>
+          <!-- period tabs -->
+          <div style="display: flex; border: 2px solid #33261A; background: #FBF4E6;">
+            <div style="flex: 1; padding: 8px 0; text-align: center; font-family: 'Jua', sans-serif; font-size: 14px; background: #E4572E; color: #FBF4E6; border-right: 2px solid #33261A;">오늘</div>
+            <div style="flex: 1; padding: 8px 0; text-align: center; font-family: 'Jua', sans-serif; font-size: 14px; color: #33261A; border-right: 2px solid #33261A;">주간</div>
+            <div style="flex: 1; padding: 8px 0; text-align: center; font-family: 'Jua', sans-serif; font-size: 14px; color: #33261A;">전체</div>
+          </div>
+          <!-- podium: top3 as chip towers -->
+          <div style="display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding: 8px 0 2px;">
+            <div style="width: 88px; display: flex; flex-direction: column; border: 3px solid #33261A; box-shadow: 3px 3px 0 #33261A;">
+              <div style="height: 74px; background: #1F7A72; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <span style="font-family: 'Rammetto One', cursive; font-size: 28px; color: #FBF4E6;">2</span>
+              </div>
+              <div style="background: #FBF4E6; border-top: 3px solid #33261A; padding: 5px 7px; display: flex; flex-direction: column; gap: 0px;">
+                <span style="font-family: 'Jua', sans-serif; font-size: 12px;">토마토킹</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #6b5947;">CC 087-C · 87칩</span>
+              </div>
+            </div>
+            <div style="width: 96px; display: flex; flex-direction: column; border: 3px solid #33261A; box-shadow: 4px 4px 0 #33261A;">
+              <div style="height: 104px; background: #EDAA3C; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative;">
+                <div style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 12px solid #E4572E;"></div>
+                <span style="font-family: 'Rammetto One', cursive; font-size: 38px; color: #33261A;">1</span>
+              </div>
+              <div style="background: #FBF4E6; border-top: 3px solid #33261A; padding: 6px 8px; display: flex; flex-direction: column; gap: 0px;">
+                <span style="font-family: 'Jua', sans-serif; font-size: 13px;">쌓기의신</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #6b5947;">CC 112-C · 112칩</span>
+              </div>
+            </div>
+            <div style="width: 88px; display: flex; flex-direction: column; border: 3px solid #33261A; box-shadow: 3px 3px 0 #33261A;">
+              <div style="height: 56px; background: #A93B2A; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <span style="font-family: 'Rammetto One', cursive; font-size: 24px; color: #FBF4E6;">3</span>
+              </div>
+              <div style="background: #FBF4E6; border-top: 3px solid #33261A; padding: 5px 7px; display: flex; flex-direction: column; gap: 0px;">
+                <span style="font-family: 'Jua', sans-serif; font-size: 12px;">칩순이</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #6b5947;">CC 079-C · 79칩</span>
+              </div>
+            </div>
+          </div>
+          <!-- list rows -->
+          <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+            <sc-for list="{{ rankRows }}" as="r" hint-placeholder-count="4">
+              <div style="background: #FBF4E6; border: 2px solid #33261A; display: flex; align-items: center; gap: 10px; padding: 9px 12px;">
+                <span style="width: 26px; font-family: 'Rammetto One', cursive; font-size: 15px; color: #6b5947;">{{ r.rank }}</span>
+                <div style="width: 20px; height: 14px; border: 2px solid #33261A; background-color: {{ r.hex }};"></div>
+                <span style="font-family: 'Jua', sans-serif; font-size: 15px;">{{ r.name }}</span>
+                <span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #55452F;">{{ r.score }}칩</span>
+              </div>
+            </sc-for>
+          </div>
+          <!-- my rank pinned -->
+          <div style="background: #FBF4E6; border: 3px solid #E4572E; box-shadow: 4px 4px 0 #33261A; display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+            <span style="width: 34px; font-family: 'Rammetto One', cursive; font-size: 15px; color: #E4572E;">214</span>
+            <div style="width: 20px; height: 14px; border: 2px solid #33261A; background: #EDAA3C;"></div>
+            <span style="font-family: 'Jua', sans-serif; font-size: 15px;">나 (칩린이)</span>
+            <span style="margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #33261A; font-weight: 700;">37칩</span>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <sc-for list="{{ rankNotes }}" as="n" hint-placeholder-count="5">
+          <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #33261A; color: #FBF4E6; font-family: 'Rammetto One', cursive; font-size: 14px; display: flex; align-items: center; justify-content: center;">{{ n.num }}</div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div style="font-family: 'Jua', sans-serif; font-size: 17px;">{{ n.title }}</div>
+              <div style="font-size: 13.5px; line-height: 1.7; color: #55452F;">{{ n.body }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 08 STAGE / BACKGROUND SYSTEM ============ -->
+  <section data-screen-label="스테이지 배경 시스템" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">08</span>
       <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">스테이지 · 배경 시스템</h2>
       <span style="font-size: 15px; color: #6b5947;">"탑이 높아질수록 세계가 스크롤된다"</span>
     </div>
@@ -375,7 +462,7 @@
   <!-- ============ 08 MOTION ============ -->
   <section data-screen-label="모션 가이드" style="display: flex; flex-direction: column; gap: 28px;">
     <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
-      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">08</span>
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">09</span>
       <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">모션 가이드</h2>
     </div>
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
@@ -394,7 +481,7 @@
   <!-- ============ 09 SOUND ============ -->
   <section data-screen-label="사운드 가이드" style="display: flex; flex-direction: column; gap: 28px;">
     <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
-      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">09</span>
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">10</span>
       <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">사운드 가이드</h2>
       <span style="font-size: 15px; color: #6b5947;">화면 문구는 한글, 보이스는 영어</span>
     </div>
@@ -452,6 +539,19 @@ class Component extends DCLogic {
         { num: '3', title: '보조 통계는 2개까지', body: '퍼펙트 횟수, 최다 콤보만. 통계 과잉은 캐주얼 톤을 해침.' },
         { num: '4', title: 'CTA 위계', body: '"다시 쌓기"가 유일한 크림색 대형 버튼(재도전 최우선). 공유·홈은 절반 크기의 보조 버튼.' },
         { num: '5', title: '진입 모션', body: '결과 칩이 위에서 "툭" 떨어지며 등장(게임의 핵심 동작 재현). 이후 버튼이 아래에서 순차 슬라이드 업.' }
+      ],
+      rankRows: [
+        { rank: '4', hex: '#6E7F3C', name: '아보카도토스트', score: '74' },
+        { rank: '5', hex: '#E4572E', name: '주황이', score: '71' },
+        { rank: '6', hex: '#1F7A72', name: 'STACK_MASTER', score: '68' },
+        { rank: '7', hex: '#A93B2A', name: '벽돌공', score: '65' }
+      ],
+      rankNotes: [
+        { num: '1', title: '포디움 = 칩 탑', body: '1-3위를 게임의 핵심 오브젝트인 컬러칩으로 표현. 칩 높이가 순위를 나타내고(1위가 가장 높음), 라벨의 칩 번호(CC 112-C)가 점수와 연동 — 결과 화면의 "점수 = 수집한 색" 시스템이 랭킹까지 이어짐. 1위 칩 위에만 강조색 삼각 깃발.' },
+        { num: '2', title: '기간 탭은 3개까지', body: '오늘 / 주간 / 전체. 활성 탭은 강조색 오렌지 배경(화면 내 유일한 강조색 사용처). 캐주얼 게임에서 세분화된 필터는 과잉.' },
+        { num: '3', title: '행마다 색 스와치', body: '각 유저의 최고 기록 당시 마지막 칩 색을 작은 스와치로 표시 — 리스트에 브랜드 5색이 자연스럽게 흐르게 하는 장치.' },
+        { num: '4', title: '내 순위 하단 고정', body: '스크롤과 무관하게 항상 하단에 고정(sticky). 유일하게 강조색 3px 외곽선을 두른 행. 순위 숫자도 오렌지 — "여기가 나"를 1초 안에 인지.' },
+        { num: '5', title: '진입점과 신기록 연출', body: '결과 화면 "기록 공유" 옆과 홈에서 진입. 신기록 직후 진입 시 내 행이 리스트 위치까지 자동 스크롤 후 착지 스쿼시 모션으로 강조 + VO "NEW RECORD!"' }
       ],
       stages: [
         { name: '서울', en: 'SEOUL', sky: '#EFE3CB', sun: '#EDAA3C', bld: '#B3A07E', shape: 'polygon(50% 0, 100% 100%, 0 100%)', desc: '남산타워 · 궁궐 처마 · 한강 다리. 시그니처: 겨자색 노을.' },

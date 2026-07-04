@@ -64,25 +64,27 @@
 
   #boardTabs { display: flex; gap: 8px; }
   #boardTabs .tab {
-    font-size: 15px; padding: 8px 22px; box-shadow: none;
+    font-size: 15px; padding: 8px 16px; box-shadow: none;
+    white-space: nowrap; flex-shrink: 0;
     background: rgba(255,255,255,.18); color: rgba(255,255,255,.8);
     border: 1px solid rgba(255,255,255,.3);
   }
   #boardTabs .tab.active { background: #fff; color: #1c1c22; }
 
   #boardList {
-    width: 78%; max-width: 420px; height: 46%;
+    width: 86%; max-width: 420px; height: 46%;
     overflow-y: auto; border-radius: 14px;
     background: rgba(0,0,0,.25); padding: 8px 0;
   }
   .board-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 16px; color: #fff; font-size: 15px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; color: #fff; font-size: 15px;
   }
-  .board-row .rank { width: 34px; text-align: right; font-weight: 800; opacity: .75; }
-  .board-row .nick { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .board-row .pts  { font-weight: 700; }
-  .board-row .ht   { width: 52px; text-align: right; font-size: 12px; opacity: .6; }
+  .board-row .rank { flex: 0 0 30px; text-align: right; font-weight: 800; opacity: .75; }
+  /* 닉네임이 최우선으로 보이도록: 다른 컬럼은 축소 금지, 닉네임만 말줄임 */
+  .board-row .nick { flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-row .pts  { flex: 0 0 auto; font-weight: 700; }
+  .board-row .ht   { flex: 0 0 auto; text-align: right; font-size: 11px; opacity: .6; }
   .board-row.me { background: rgba(232,185,62,.25); border-left: 3px solid #E8B93E; }
   .board-msg { color: rgba(255,255,255,.75); padding: 30px 0; font-size: 15px; }
 
