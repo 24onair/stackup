@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8DCC4; }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans KR', sans-serif; color: #33261A; display: flex; flex-direction: column; align-items: center; padding: 48px 24px 96px;">
+<div style="width: 1080px; max-width: 100%; display: flex; flex-direction: column; gap: 40px;">
+
+  <!-- HEADER -->
+  <section style="background: #F3E9D7; border: 3px solid #33261A; box-shadow: 8px 8px 0 #33261A; padding: 36px 44px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="background: #1F7A72; color: #FBF4E6; font-family: 'Jua', sans-serif; font-size: 15px; padding: 4px 14px; border: 2px solid #33261A;">스테이지 01 · 서울 SEOUL</span>
+        <span style="font-family: 'Rammetto One', cursive; font-size: 14px; color: #A93B2A;">CHIP! CHIP! 칩칩!</span>
+      </div>
+      <h1 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 38px; font-weight: 400;">고도별 배경 스크롤 설계</h1>
+      <p style="margin: 0; font-size: 15px; color: #55452F; line-height: 1.7;">칩이 착지할 때마다 카메라가 칩 1개 높이만큼 상승 — 지상 노점부터 성층권까지 하나의 연속된 세로 스트립입니다.</p>
+    </div>
+    <div style="display: flex; align-items: flex-end; flex-shrink: 0;">
+      <div style="width: 40px; height: 26px; background: #1F7A72; border: 3px solid #33261A;"></div>
+      <div style="width: 40px; height: 26px; background: #EDAA3C; border: 3px solid #33261A; margin-left: -26px; margin-bottom: 28px;"></div>
+      <div style="width: 40px; height: 26px; background: #E4572E; border: 3px solid #33261A; margin-left: -28px; margin-bottom: 56px;"></div>
+    </div>
+  </section>
+
+  <!-- STRIP + NOTES GRID (top = highest altitude) -->
+  <div style="display: grid; grid-template-columns: 400px 1fr; column-gap: 40px; row-gap: 0;">
+
+    <!-- ===== ZONE 4 STRIP : 성층권 ===== -->
+    <div style="position: relative; height: 500px; overflow: hidden; border: 3px solid #33261A; border-bottom: none; background-color: #33261A; background-image: radial-gradient(#FBF4E6 1.5px, transparent 2px), radial-gradient(rgba(251,244,230,0.5) 1px, transparent 1.5px); background-size: 90px 120px, 50px 70px; background-position: 20px 30px, 0 0;">
+      <!-- zone badge -->
+      <div style="position: absolute; top: 16px; left: 16px; background: #E4572E; border: 2px solid #FBF4E6; padding: 5px 12px; font-family: 'Jua', sans-serif; font-size: 14px; color: #FBF4E6; z-index: 3;">ZONE 4 · 성층권 · 71칩+</div>
+      <!-- moon -->
+      <div style="position: absolute; top: 70px; right: 44px; width: 74px; height: 74px; border-radius: 50%; background: #EDAA3C; border: 3px solid #FBF4E6; overflow: hidden;">
+        <div style="position: absolute; top: -12px; left: -20px; width: 64px; height: 64px; border-radius: 50%; background: #33261A;"></div>
+      </div>
+      <!-- chip satellite (brand easter egg) -->
+      <div style="position: absolute; top: 200px; left: 60px; display: flex; align-items: center; transform: rotate(-8deg);">
+        <div style="width: 34px; height: 12px; background: #1F7A72; border: 2px solid #FBF4E6;"></div>
+        <div style="width: 48px; display: flex; flex-direction: column; border: 2px solid #FBF4E6;">
+          <div style="height: 24px; background: #E4572E;"></div>
+          <div style="height: 12px; background: #FBF4E6; font-family: 'IBM Plex Mono', monospace; font-size: 6px; color: #33261A; display: flex; align-items: center; justify-content: center;">CC-SAT</div>
+        </div>
+        <div style="width: 34px; height: 12px; background: #1F7A72; border: 2px solid #FBF4E6;"></div>
+      </div>
+      <!-- shooting star -->
+      <div style="position: absolute; top: 320px; right: 90px; width: 70px; height: 3px; background: linear-gradient(to left, #FBF4E6, transparent); transform: rotate(-24deg);"></div>
+      <!-- altitude marker -->
+      <div style="position: absolute; bottom: 10px; right: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #C9B592;">71칩 ↑</div>
+      <!-- crossfade to zone 3 -->
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(to bottom, transparent, #D9E0D3);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
+      <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-family: 'Rammetto One', cursive; font-size: 15px; color: #E4572E;">ZONE 4</span>
+          <span style="font-family: 'Jua', sans-serif; font-size: 20px;">성층권 — 별과 위성</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947; margin-left: auto;">71칩 이상 · 공통 구간</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="width: 34px; height: 20px; background: #33261A; border: 2px solid #33261A;"></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#33261A INK NIGHT</span>
+        </div>
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: #55452F;">모든 스테이지가 합류하는 우주 구간 — 최상위 기록 경쟁 무대. 별은 2단 패럴랙스 도트 패턴, 브랜드 위성 'CC-SAT'과 초승달이 순환 등장. 유성은 10칩마다 1회, 리더보드 진입 시 "NEW RECORD!" 팡파레.</p>
+        <div style="font-size: 12.5px; color: #A93B2A; font-weight: 500;">진입 연출 — 배경이 2초 크로스페이드로 암전, 문구 "서울 밤하늘을 넘었어요!" + VO "GOING UP!"</div>
+      </div>
+    </div>
+
+    <!-- ===== ZONE 3 STRIP : 하늘 ===== -->
+    <div style="position: relative; height: 480px; overflow: hidden; border: 3px solid #33261A; border-top: none; border-bottom: none; background: #D9E0D3;">
+      <div style="position: absolute; top: 12px; left: 16px; background: #1F7A72; border: 2px solid #33261A; padding: 5px 12px; font-family: 'Jua', sans-serif; font-size: 14px; color: #FBF4E6; z-index: 3;">ZONE 3 · 하늘 · 41-70칩</div>
+      <!-- clouds -->
+      <div style="position: absolute; top: 90px; left: 36px; width: 120px; height: 38px; background: #FBF4E6; border: 2px solid #33261A; border-radius: 20px;"></div>
+      <div style="position: absolute; top: 78px; left: 66px; width: 56px; height: 30px; background: #FBF4E6; border: 2px solid #33261A; border-radius: 16px;"></div>
+      <div style="position: absolute; top: 210px; right: 30px; width: 150px; height: 42px; background: #FBF4E6; border: 2px solid #33261A; border-radius: 22px;"></div>
+      <div style="position: absolute; top: 196px; right: 66px; width: 62px; height: 32px; background: #FBF4E6; border: 2px solid #33261A; border-radius: 18px;"></div>
+      <div style="position: absolute; top: 380px; left: 90px; width: 100px; height: 32px; background: #FBF4E6; border: 2px solid #33261A; border-radius: 18px; opacity: 0.7;"></div>
+      <!-- hot air balloon -->
+      <div style="position: absolute; top: 250px; left: 56px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 62px; height: 70px; border-radius: 50% 50% 42% 42%; background: linear-gradient(to right, #E4572E 0 20%, #EDAA3C 20% 40%, #6E7F3C 40% 60%, #1F7A72 60% 80%, #A93B2A 80%); border: 3px solid #33261A;"></div>
+        <div style="width: 2px; height: 12px; background: #33261A;"></div>
+        <div style="width: 26px; height: 16px; background: #C29B5F; border: 2px solid #33261A;"></div>
+      </div>
+      <!-- kite (Korean bangpae yeon) -->
+      <div style="position: absolute; top: 110px; right: 190px; display: flex; flex-direction: column; align-items: center; transform: rotate(14deg);">
+        <div style="width: 44px; height: 56px; background: #FBF4E6; border: 3px solid #33261A; position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 18px; height: 18px; border-radius: 50%; background: #E4572E; border: 2px solid #33261A;"></div>
+        </div>
+        <div style="width: 2px; height: 60px; background: #33261A; transform: rotate(-16deg); transform-origin: top;"></div>
+      </div>
+      <div style="position: absolute; bottom: 10px; right: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6b5947;">41-70칩</div>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(to bottom, transparent, #EAD9B4);"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
+      <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-family: 'Rammetto One', cursive; font-size: 15px; color: #1F7A72;">ZONE 3</span>
+          <span style="font-family: 'Jua', sans-serif; font-size: 20px;">하늘 — 구름 위 산책</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947; margin-left: auto;">41-70칩</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="width: 34px; height: 20px; background: #D9E0D3; border: 2px solid #33261A;"></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#D9E0D3 SKY SAGE</span>
+        </div>
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: #55452F;">랜드마크가 사라지고 오브젝트 밀도가 절반으로 줄어드는 휴식 구간 — 집중 회복 설계. 열기구(브랜드 5색 줄무늬)와 방패연이 0.3x 속도로 유영. 구름은 크림색 + 잉크 외곽선 스티커 스타일 3종 반복.</p>
+        <div style="font-size: 12.5px; color: #A93B2A; font-weight: 500;">사운드 — BGM 악기 수 감소(멜로디+베이스만), 바람 앰비언스 추가. 새소리 폴리.</div>
+      </div>
+    </div>
+
+    <!-- ===== ZONE 2 STRIP : 스카이라인 ===== -->
+    <div style="position: relative; height: 560px; overflow: hidden; border: 3px solid #33261A; border-top: none; border-bottom: none; background: #EAD9B4;">
+      <div style="position: absolute; top: 12px; left: 16px; background: #EDAA3C; border: 2px solid #33261A; padding: 5px 12px; font-family: 'Jua', sans-serif; font-size: 14px; color: #33261A; z-index: 3;">ZONE 2 · 스카이라인 · 16-40칩</div>
+      <!-- mustard sunset sun -->
+      <div style="position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; border-radius: 50%; background: #EDAA3C; border: 3px solid #33261A;"></div>
+      <!-- Namsan tower on hill (right) -->
+      <div style="position: absolute; bottom: 120px; right: 28px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 3px; height: 44px; background: #33261A;"></div>
+        <div style="width: 40px; height: 22px; background: #E4572E; border: 3px solid #33261A; border-radius: 8px;"></div>
+        <div style="width: 14px; height: 90px; background: #C9B592; border: 3px solid #33261A; border-top: none;"></div>
+        <div style="width: 130px; height: 56px; background: #6E7F3C; border: 3px solid #33261A; border-radius: 70px 70px 0 0; margin-top: -3px;"></div>
+      </div>
+      <!-- 63 building -->
+      <div style="position: absolute; bottom: 90px; left: 34px; width: 52px; height: 240px; background: #C9A84C; border: 3px solid #33261A; clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%); display: flex; flex-direction: column; justify-content: space-between; padding: 14px 0;">
+        <div style="height: 3px; background: rgba(51,38,26,0.35); margin: 0 10px;"></div>
+        <div style="height: 3px; background: rgba(51,38,26,0.35); margin: 0 9px;"></div>
+        <div style="height: 3px; background: rgba(51,38,26,0.35); margin: 0 8px;"></div>
+        <div style="height: 3px; background: rgba(51,38,26,0.35); margin: 0 7px;"></div>
+        <div style="height: 3px; background: rgba(51,38,26,0.35); margin: 0 6px;"></div>
+      </div>
+      <!-- Lotte tower -->
+      <div style="position: absolute; bottom: 90px; left: 120px; width: 44px; height: 330px; background: #C9B592; border: 3px solid #33261A; clip-path: polygon(32% 0, 68% 0, 92% 100%, 8% 100%);"></div>
+      <!-- generic blocks -->
+      <div style="position: absolute; bottom: 90px; left: 196px; width: 58px; height: 150px; background: #B3A07E; border: 3px solid #33261A;"></div>
+      <div style="position: absolute; bottom: 90px; left: 268px; width: 44px; height: 200px; background: #C9B592; border: 3px solid #33261A;"></div>
+      <!-- Han river band + bridge -->
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 90px; background: #1F7A72; border-top: 3px solid #33261A;"></div>
+      <div style="position: absolute; bottom: 58px; left: 0; right: 0; height: 12px; background: #A93B2A; border: 3px solid #33261A;"></div>
+      <div style="position: absolute; bottom: 70px; left: 40px; width: 120px; height: 44px; border: 3px solid #33261A; border-bottom: none; border-radius: 60px 60px 0 0; background: transparent;"></div>
+      <div style="position: absolute; bottom: 70px; left: 200px; width: 120px; height: 44px; border: 3px solid #33261A; border-bottom: none; border-radius: 60px 60px 0 0; background: transparent;"></div>
+      <div style="position: absolute; bottom: 10px; right: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #FBF4E6; z-index: 2;">16-40칩</div>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(to bottom, transparent, rgba(239,227,203,0.55)); pointer-events: none;"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
+      <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-family: 'Rammetto One', cursive; font-size: 15px; color: #EDAA3C;">ZONE 2</span>
+          <span style="font-family: 'Jua', sans-serif; font-size: 20px;">스카이라인 — 랜드마크 퍼레이드</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947; margin-left: auto;">16-40칩</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="width: 34px; height: 20px; background: #EAD9B4; border: 2px solid #33261A;"></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#EAD9B4 MUSTARD DUSK — 서울 시그니처 노을</span>
+        </div>
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: #55452F;">서울의 하이라이트 구간. 남산타워(전망대는 강조색 오렌지) → 63빌딩 → 롯데타워 → 한강 다리 순으로 10칩마다 새 랜드마크가 지나갑니다. 실루엣은 채도 30% 이하 페이퍼 톤, 잉크 외곽선 3px — 게임 칩보다 항상 뒤로 물러나도록.</p>
+        <div style="font-size: 12.5px; color: #A93B2A; font-weight: 500;">패럴랙스 — 강/다리 1x · 빌딩 0.6x · 남산+노을 0.3x. 각 랜드마크 첫 등장 시 이름표 토스트 1초("남산타워!").</div>
+      </div>
+    </div>
+
+    <!-- ===== ZONE 1 STRIP : 지상 ===== -->
+    <div style="position: relative; height: 520px; overflow: hidden; border: 3px solid #33261A; border-top: none; background: #EFE3CB;">
+      <div style="position: absolute; top: 12px; left: 16px; background: #6E7F3C; border: 2px solid #33261A; padding: 5px 12px; font-family: 'Jua', sans-serif; font-size: 14px; color: #FBF4E6; z-index: 3;">ZONE 1 · 지상 · 0-15칩</div>
+      <!-- Gwanghwamun-style gate (left) -->
+      <div style="position: absolute; bottom: 70px; left: 24px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 120px; height: 26px; background: #33261A; clip-path: polygon(8% 100%, 0 30%, 14% 38%, 50% 0, 86% 38%, 100% 30%, 92% 100%);"></div>
+        <div style="width: 96px; height: 20px; background: #1F7A72; border: 3px solid #33261A; margin-top: -2px;"></div>
+        <div style="width: 110px; height: 24px; background: #33261A; clip-path: polygon(6% 100%, 0 26%, 13% 36%, 50% 0, 87% 36%, 100% 26%, 94% 100%); margin-top: 2px;"></div>
+        <div style="width: 104px; height: 58px; background: #C9B592; border: 3px solid #33261A; margin-top: -2px; display: flex; justify-content: center; align-items: flex-end;">
+          <div style="width: 34px; height: 40px; background: #33261A; border-radius: 17px 17px 0 0;"></div>
+        </div>
+      </div>
+      <!-- gingko tree -->
+      <div style="position: absolute; bottom: 70px; left: 180px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: #EDAA3C; border: 3px solid #33261A;"></div>
+        <div style="width: 10px; height: 34px; background: #33261A; margin-top: -6px;"></div>
+      </div>
+      <!-- pojangmacha street stall -->
+      <div style="position: absolute; bottom: 70px; right: 30px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 110px; height: 34px; background: #E4572E; border: 3px solid #33261A; clip-path: polygon(0 100%, 12% 0, 88% 0, 100% 100%);"></div>
+        <div style="width: 88px; height: 44px; background: #FBF4E6; border: 3px solid #33261A; margin-top: -2px; display: flex; align-items: center; justify-content: center; font-family: 'Jua', sans-serif; font-size: 13px;">분식</div>
+      </div>
+      <!-- street lamp -->
+      <div style="position: absolute; bottom: 70px; right: 170px; display: flex; flex-direction: column; align-items: center;">
+        <div style="width: 20px; height: 20px; border-radius: 50%; background: #EDAA3C; border: 3px solid #33261A;"></div>
+        <div style="width: 5px; height: 90px; background: #33261A;"></div>
+      </div>
+      <!-- gameplay anchor: chip stack + guide -->
+      <div style="position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center;">
+        <div style="width: 78px; border: 3px solid #33261A; display: flex; flex-direction: column;"><div style="height: 24px; background: #1F7A72;"></div><div style="height: 11px; background: #FBF4E6; border-top: 2px solid #33261A;"></div></div>
+        <div style="width: 78px; border: 3px solid #33261A; margin-bottom: -3px; margin-left: 8px; display: flex; flex-direction: column;"><div style="height: 24px; background: #A93B2A;"></div><div style="height: 11px; background: #FBF4E6; border-top: 2px solid #33261A;"></div></div>
+        <div style="width: 78px; border: 3px solid #33261A; margin-bottom: -3px; margin-left: -6px; display: flex; flex-direction: column;"><div style="height: 24px; background: #EDAA3C;"></div><div style="height: 11px; background: #FBF4E6; border-top: 2px solid #33261A;"></div></div>
+      </div>
+      <div style="position: absolute; bottom: 190px; left: 50%; top: 60px; width: 0; border-left: 3px dashed rgba(51,38,26,0.25);"></div>
+      <!-- ground -->
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: #6E7F3C; border-top: 3px solid #33261A; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #FBF4E6;">0칩 · 시작 지점</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 24px 0;">
+      <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-family: 'Rammetto One', cursive; font-size: 15px; color: #6E7F3C;">ZONE 1</span>
+          <span style="font-family: 'Jua', sans-serif; font-size: 20px;">지상 — 서울의 거리</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947; margin-left: auto;">0-15칩</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="width: 34px; height: 20px; background: #EFE3CB; border: 2px solid #33261A;"></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#EFE3CB PAPER GROUND</span>
+        </div>
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: #55452F;">플레이가 시작되는 눈높이 구간. 광화문 문루, 은행나무, 분식 포장마차, 가로등 — 친숙한 거리 오브젝트가 근경(1x)에 배치되어 첫 칩부터 "서울에 있다"는 감각을 줍니다. 스택이 자라는 중앙부는 오브젝트 금지 영역(폭 140px).</p>
+        <div style="font-size: 12.5px; color: #A93B2A; font-weight: 500;">사운드 — 거리 앰비언스(자전거 벨, 지글거리는 분식 폴리) + BGM 풀 편성. 첫 3회 플레이 시 터치 안내 노출.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSITION RULES -->
+  <section style="background: #33261A; border: 3px solid #33261A; box-shadow: 8px 8px 0 rgba(51,38,26,0.25); padding: 28px 36px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="font-family: 'Jua', sans-serif; font-size: 20px; color: #FBF4E6;">구간 전환 공통 규칙</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <div style="border: 2px solid #FBF4E6; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 13px; color: #EDAA3C;">CROSSFADE 2.0s</div>
+        <div style="font-size: 13px; line-height: 1.7; color: #C9B592;">배경색은 경계 ±3칩 구간에서 세로 그라데이션으로 미리 섞어 두고, 카메라 통과 시 하늘색만 2초 크로스페이드.</div>
+      </div>
+      <div style="border: 2px solid #FBF4E6; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 13px; color: #EDAA3C;">축하 토스트</div>
+        <div style="font-size: 13px; line-height: 1.7; color: #C9B592;">경계 통과 시 한글 문구 1.2초 — "한강을 건넜어요!" / "서울 하늘 위로!" / "서울 밤하늘을 넘었어요!" + VO "GOING UP!"</div>
+      </div>
+      <div style="border: 2px solid #FBF4E6; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 13px; color: #EDAA3C;">밀도 곡선</div>
+        <div style="font-size: 13px; line-height: 1.7; color: #C9B592;">오브젝트 밀도는 지상 100% → 스카이라인 80% → 하늘 40% → 성층권 25%. 높이 올라갈수록 비워서 긴장을 화면 중앙(스택)에 집중.</div>
+      </div>
+    </div>
+  </section>
+
+  <div style="text-align: center; font-size: 13px; color: #8a7660;">CHIP! CHIP! 칩칩! — 서울 스테이지 고도 스크롤 설계 · 디자인 가이드 별첨</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1200}}"></script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rammetto+One&family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: #E8DCC4; }
+    @keyframes chipSwing { 0%,100% { transform: translateX(-26px); } 50% { transform: translateX(26px); } }
+  </style>
+</helmet>
+
+<div style="font-family: 'IBM Plex Sans KR', sans-serif; color: #33261A; display: flex; flex-direction: column; align-items: center; padding: 48px 24px 96px;">
+<div style="width: 1040px; max-width: 100%; display: flex; flex-direction: column; gap: 72px;">
+
+  <!-- ============ COVER ============ -->
+  <section data-screen-label="커버" style="background: #F3E9D7; border: 3px solid #33261A; box-shadow: 8px 8px 0 #33261A; padding: 72px 64px; display: flex; flex-direction: column; gap: 40px; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 14px; display: flex;">
+      <div style="flex: 1; background: #E4572E;"></div>
+      <div style="flex: 1; background: #EDAA3C;"></div>
+      <div style="flex: 1; background: #6E7F3C;"></div>
+      <div style="flex: 1; background: #1F7A72;"></div>
+      <div style="flex: 1; background: #A93B2A;"></div>
+    </div>
+    <div style="display: flex; align-items: flex-end; gap: 6px; margin-top: 12px;">
+      <div style="width: 54px; height: 34px; background: #1F7A72; border: 3px solid #33261A;"></div>
+      <div style="width: 54px; height: 34px; background: #EDAA3C; border: 3px solid #33261A; margin-left: -34px; margin-bottom: 38px;"></div>
+      <div style="width: 54px; height: 34px; background: #E4572E; border: 3px solid #33261A; margin-left: -38px; margin-bottom: 76px;"></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-family: 'Rammetto One', cursive; font-size: 88px; line-height: 1.05; color: #E4572E; text-shadow: 5px 5px 0 #33261A;">CHIP! CHIP!</div>
+      <div style="font-family: 'Jua', sans-serif; font-size: 40px; color: #33261A;">칩칩! — 한 번의 터치로 쌓는 컬러의 탑</div>
+    </div>
+    <div style="display: flex; gap: 24px; font-size: 15px; font-weight: 500; color: #6b5947;">
+      <span>브랜드 &amp; UI 디자인 가이드</span><span>·</span><span>v1.0</span><span>·</span><span>모바일 세로형</span><span>·</span><span>2026.07</span>
+    </div>
+  </section>
+
+  <!-- ============ 01 NAMING ============ -->
+  <section data-screen-label="네이밍" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">01</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">서비스 네이밍</h2>
+    </div>
+    <div style="background: #FBF4E6; border: 3px solid #33261A; box-shadow: 6px 6px 0 #33261A; padding: 36px 40px; display: flex; gap: 40px; align-items: center;">
+      <div style="display: flex; flex-direction: column; gap: 10px; flex: 1;">
+        <div style="display: inline-flex;"><span style="background: #E4572E; color: #FBF4E6; font-family: 'Jua', sans-serif; font-size: 15px; padding: 4px 14px; border: 2px solid #33261A;">추천안</span></div>
+        <div style="font-family: 'Rammetto One', cursive; font-size: 48px; color: #E4572E; text-shadow: 3px 3px 0 #33261A;">CHIP! CHIP!</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 26px;">칩칩!</div>
+        <p style="margin: 8px 0 0; font-size: 16px; line-height: 1.7; color: #55452F;">'칩(색상 칩)'과 쌓이는 소리의 의성어를 겹친 이중 의미. 한글로 읽어도, 영어로 읽어도 동일하게 발음되어 병기 표기에 최적. 느낌표 두 개가 "터치 한 번 → 칩 하나"의 게임 리듬을 그대로 표현합니다.</p>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #1F7A72;">TON-TON</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 17px;">톤톤</div>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #6b5947; line-height: 1.6;">컬러 '톤' + 떨어지는 소리. 부드럽고 귀여운 발음.</p>
+      </div>
+      <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #EDAA3C;">CHAK-CHAK</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 17px;">착착</div>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #6b5947; line-height: 1.6;">차곡차곡 쌓이는 한국어 의성어. 국내 감성이 강함.</p>
+      </div>
+      <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #6E7F3C;">COLOR TOWER</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 17px;">컬러타워</div>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #6b5947; line-height: 1.6;">직관적 설명형. 검색에 강하지만 개성은 약함.</p>
+      </div>
+      <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">DROP&amp;STACK</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 17px;">드롭앤스택</div>
+        <p style="margin: 6px 0 0; font-size: 13px; color: #6b5947; line-height: 1.6;">게임 룰 그대로. 글로벌 하이퍼캐주얼 톤.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 LOGO ============ -->
+  <section data-screen-label="로고" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">02</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">로고 &amp; 워드마크</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;">
+      <div style="background: #F3E9D7; border: 3px solid #33261A; padding: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;">
+        <div style="display: flex; align-items: flex-end;">
+          <div style="width: 44px; height: 28px; background: #1F7A72; border: 3px solid #33261A;"></div>
+          <div style="width: 44px; height: 28px; background: #EDAA3C; border: 3px solid #33261A; margin-left: -28px; margin-bottom: 30px;"></div>
+          <div style="width: 44px; height: 28px; background: #E4572E; border: 3px solid #33261A; margin-left: -30px; margin-bottom: 60px;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+          <div style="font-family: 'Rammetto One', cursive; font-size: 46px; color: #E4572E; text-shadow: 3px 3px 0 #33261A;">CHIP! CHIP!</div>
+          <div style="font-family: 'Jua', sans-serif; font-size: 22px;">칩칩!</div>
+        </div>
+        <div style="font-size: 13px; color: #6b5947; font-weight: 500;">기본형 (세로 락업) — 타이틀 화면, 스플래시</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: #33261A; border: 3px solid #33261A; padding: 28px; display: flex; align-items: center; justify-content: center; gap: 14px; flex: 1;">
+          <div style="display: flex; align-items: flex-end;">
+            <div style="width: 26px; height: 17px; background: #1F7A72; border: 2px solid #F3E9D7;"></div>
+            <div style="width: 26px; height: 17px; background: #EDAA3C; border: 2px solid #F3E9D7; margin-left: -17px; margin-bottom: 18px;"></div>
+            <div style="width: 26px; height: 17px; background: #E4572E; border: 2px solid #F3E9D7; margin-left: -18px; margin-bottom: 36px;"></div>
+          </div>
+          <div style="font-family: 'Rammetto One', cursive; font-size: 24px; color: #F3E9D7;">CHIP! CHIP!</div>
+        </div>
+        <div style="background: #F3E9D7; border: 3px solid #33261A; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 20px; flex: 1;">
+          <div style="width: 86px; height: 86px; background: #E4572E; border: 3px solid #33261A; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 4px 4px 0 #33261A;">
+            <div style="width: 40px; height: 26px; background: #EDAA3C; border: 2px solid #33261A;"></div>
+            <div style="width: 40px; height: 14px; background: #FBF4E6; border: 2px solid #33261A; border-top: none; font-family: 'Rammetto One', cursive; font-size: 8px; color: #33261A; display: flex; align-items: center; justify-content: center;">CHIP!</div>
+          </div>
+          <div style="font-size: 13px; color: #6b5947; font-weight: 500; width: 120px; line-height: 1.6;">앱 아이콘 — 색상 칩 1개를 전면 배치</div>
+        </div>
+      </div>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px 28px; display: flex; gap: 32px; font-size: 14px; line-height: 1.7; color: #55452F;">
+      <div style="flex: 1;"><strong style="color: #33261A;">여백 규정</strong> — 로고 사방에 칩 1개 높이(로고 높이의 25%) 이상 여백 확보.</div>
+      <div style="flex: 1;"><strong style="color: #33261A;">하드 섀도</strong> — 그림자는 항상 잉크색(#33261A) 단색 오프셋. 블러 사용 금지.</div>
+      <div style="flex: 1;"><strong style="color: #33261A;">금지</strong> — 그라데이션, 외곽선 제거, 칩 아이콘 단독 회전 금지.</div>
+    </div>
+  </section>
+
+  <!-- ============ 03 COLOR ============ -->
+  <section data-screen-label="컬러" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">03</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">컬러 팔레트</h2>
+      <span style="font-size: 15px; color: #6b5947;">70년대 인쇄물 잉크 톤 — 채도는 낮추고 명도 대비는 강하게</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;">
+      <sc-for list="{{ gameColors }}" as="c" hint-placeholder-count="5">
+        <div style="border: 3px solid #33261A; background: #FBF4E6; display: flex; flex-direction: column; box-shadow: 4px 4px 0 #33261A;">
+          <div style="height: 110px; background-color: {{ c.hex }};"></div>
+          <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 2px;">
+            <div style="font-family: 'Rammetto One', cursive; font-size: 14px;">{{ c.name }}</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">{{ c.hex }}</div>
+            <div style="font-family: 'Jua', sans-serif; font-size: 13px; color: #55452F;">{{ c.kr }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <div style="border: 2px solid #33261A; display: flex;">
+        <div style="width: 72px; background: #F3E9D7;"></div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; background: #FBF4E6; flex: 1;">
+          <div style="font-family: 'Rammetto One', cursive; font-size: 13px;">PAPER</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#F3E9D7</div>
+          <div style="font-size: 12px; color: #55452F;">기본 배경 · 카드</div>
+        </div>
+      </div>
+      <div style="border: 2px solid #33261A; display: flex;">
+        <div style="width: 72px; background: #33261A;"></div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; background: #FBF4E6; flex: 1;">
+          <div style="font-family: 'Rammetto One', cursive; font-size: 13px;">INK</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#33261A</div>
+          <div style="font-size: 12px; color: #55452F;">텍스트 · 외곽선 · 그림자</div>
+        </div>
+      </div>
+      <div style="border: 2px solid #33261A; display: flex;">
+        <div style="width: 72px; background: #FBF4E6;"></div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; background: #FBF4E6; flex: 1;">
+          <div style="font-family: 'Rammetto One', cursive; font-size: 13px;">CREAM</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947;">#FBF4E6</div>
+          <div style="font-size: 12px; color: #55452F;">칩 라벨 · 밝은 면</div>
+        </div>
+      </div>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px 28px; font-size: 14px; line-height: 1.8; color: #55452F;">
+      <strong style="color: #33261A;">사용 규칙</strong> — 게임 칩 5색은 순수한 게임 오브젝트 전용. UI 배경은 PAPER, 모든 선·글자·그림자는 INK 단일색. 한 화면에서 강조색(ORANGE)은 CTA 버튼 1곳에만 사용합니다. 순수 검정(#000)·순수 흰색(#FFF)은 어디에도 쓰지 않습니다.
+    </div>
+  </section>
+
+  <!-- ============ 04 TYPOGRAPHY ============ -->
+  <section data-screen-label="타이포그래피" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">04</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">타이포그래피</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <div style="background: #FBF4E6; border: 3px solid #33261A; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Rammetto One', cursive; font-size: 44px; line-height: 1.1; color: #E4572E; text-shadow: 3px 3px 0 #33261A;">Aa 123</div>
+        <div style="font-family: 'Rammetto One', cursive; font-size: 16px;">Rammetto One</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.7; color: #6b5947;">디스플레이 (영문·숫자) — 로고, 점수, 콤보 문구. 70년대 쿠퍼블랙 계열의 둥근 세리프.</p>
+      </div>
+      <div style="background: #FBF4E6; border: 3px solid #33261A; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-family: 'Jua', sans-serif; font-size: 44px; line-height: 1.1;">쌓아 볼까?</div>
+        <div style="font-family: 'Jua', sans-serif; font-size: 16px;">주아 Jua</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.7; color: #6b5947;">한글 헤드라인 — 게임 내 모든 한글 문구, 버튼. 붓 느낌의 통통한 획이 귀여운 레트로 감성.</p>
+      </div>
+      <div style="background: #FBF4E6; border: 3px solid #33261A; padding: 28px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="font-size: 40px; line-height: 1.2; font-weight: 500;">본문 텍스트</div>
+        <div style="font-size: 16px; font-weight: 700;">IBM Plex Sans KR</div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.7; color: #6b5947;">본문·설정·설명 — 작은 크기 가독성 담당. 400/500/700 세 가지 굵기만 사용.</p>
+      </div>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 24px 28px; display: flex; flex-direction: column; gap: 14px;">
+      <div style="display: flex; align-items: baseline; gap: 24px;"><span style="width: 190px; font-size: 13px; color: #6b5947; font-family: 'IBM Plex Mono', monospace;">SCORE / 64px+</span><span style="font-family: 'Rammetto One', cursive; font-size: 40px; color: #33261A;">128</span></div>
+      <div style="display: flex; align-items: baseline; gap: 24px;"><span style="width: 190px; font-size: 13px; color: #6b5947; font-family: 'IBM Plex Mono', monospace;">헤드라인 / 32-40px</span><span style="font-family: 'Jua', sans-serif; font-size: 32px;">게임 오버!</span></div>
+      <div style="display: flex; align-items: baseline; gap: 24px;"><span style="width: 190px; font-size: 13px; color: #6b5947; font-family: 'IBM Plex Mono', monospace;">버튼 / 22-26px</span><span style="font-family: 'Jua', sans-serif; font-size: 24px;">다시 쌓기</span></div>
+      <div style="display: flex; align-items: baseline; gap: 24px;"><span style="width: 190px; font-size: 13px; color: #6b5947; font-family: 'IBM Plex Mono', monospace;">본문 / 15-16px</span><span style="font-size: 15px;">화면을 터치하면 칩이 그대로 떨어져요.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 05 GAMEPLAY SCREEN ============ -->
+  <section data-screen-label="게임 플레이 화면" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">05</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">게임 플레이 화면</h2>
+    </div>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <!-- phone mockup -->
+      <div style="width: 340px; flex-shrink: 0; background: #33261A; border-radius: 44px; padding: 12px; box-shadow: 10px 10px 0 rgba(51,38,26,0.25);">
+        <div style="border-radius: 34px; overflow: hidden; position: relative; height: 690px; background: linear-gradient(#F3E9D7 0%, #F3E9D7 55%, #EDDFC5 100%);">
+          <!-- bg landmark band (Seoul theme, geometric) -->
+          <div style="position: absolute; left: 0; right: 0; bottom: 150px; display: flex; align-items: flex-end; gap: 18px; padding: 0 20px; opacity: 0.5;">
+            <div style="width: 26px; height: 120px; background: #C9B592;"></div>
+            <div style="width: 40px; height: 78px; background: #C9B592;"></div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 10px; height: 40px; background: #B3A07E;"></div>
+              <div style="width: 34px; height: 90px; background: #B3A07E; clip-path: polygon(50% 0, 100% 100%, 0 100%);"></div>
+            </div>
+            <div style="width: 30px; height: 100px; background: #C9B592;"></div>
+            <div style="width: 48px; height: 60px; background: #C9B592;"></div>
+          </div>
+          <!-- sun -->
+          <div style="position: absolute; top: 96px; right: 34px; width: 64px; height: 64px; border-radius: 50%; background: #EDAA3C; border: 3px solid #33261A; opacity: 0.85;"></div>
+          <!-- HUD -->
+          <div style="position: absolute; top: 18px; left: 18px; right: 18px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: #FBF4E6; border: 2px solid #33261A; box-shadow: 3px 3px 0 #33261A; padding: 6px 14px; display: flex; align-items: baseline; gap: 6px;">
+              <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #33261A;">24</span>
+              <span style="font-family: 'Jua', sans-serif; font-size: 13px; color: #6b5947;">칩</span>
+            </div>
+            <div style="background: #1F7A72; border: 2px solid #33261A; box-shadow: 3px 3px 0 #33261A; padding: 6px 14px; font-family: 'Jua', sans-serif; font-size: 14px; color: #FBF4E6;">서울 · 스테이지 3</div>
+          </div>
+          <!-- swinging chip -->
+          <div style="position: absolute; top: 92px; left: 50%; margin-left: -46px; animation: chipSwing 1.6s ease-in-out infinite;">
+            <div style="width: 92px; display: flex; flex-direction: column; border: 3px solid #33261A; box-shadow: 4px 4px 0 rgba(51,38,26,0.35);">
+              <div style="height: 44px; background: #E4572E;"></div>
+              <div style="height: 22px; background: #FBF4E6; border-top: 3px solid #33261A; display: flex; align-items: center; padding: 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #33261A;">CC 165-C 주황</div>
+            </div>
+          </div>
+          <!-- drop guide -->
+          <div style="position: absolute; top: 176px; bottom: 210px; left: 50%; width: 0; border-left: 3px dashed rgba(51,38,26,0.3);"></div>
+          <!-- combo callout -->
+          <div style="position: absolute; top: 300px; left: 50%; transform: translateX(-50%) rotate(-6deg); font-family: 'Rammetto One', cursive; font-size: 26px; color: #E4572E; text-shadow: 2px 2px 0 #33261A;">PERFECT!</div>
+          <!-- stack -->
+          <div style="position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center;">
+            <sc-for list="{{ stackChips }}" as="s" hint-placeholder-count="4">
+              <div style="width: 92px; display: flex; flex-direction: column; border: 3px solid #33261A; margin-top: -3px; margin-left: {{ s.offset }};">
+                <div style="height: 30px; background-color: {{ s.hex }};"></div>
+                <div style="height: 14px; background: #FBF4E6; border-top: 2px solid #33261A; display: flex; align-items: center; padding: 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 7px; color: #33261A;">{{ s.code }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <!-- ground -->
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 90px; background: #6E7F3C; border-top: 3px solid #33261A;"></div>
+          <!-- tap hint -->
+          <div style="position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; font-family: 'Jua', sans-serif; font-size: 16px; color: #FBF4E6;">화면을 터치해서 칩을 떨어뜨려요!</div>
+        </div>
+      </div>
+      <!-- annotations -->
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <sc-for list="{{ playNotes }}" as="n" hint-placeholder-count="6">
+          <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #33261A; color: #FBF4E6; font-family: 'Rammetto One', cursive; font-size: 14px; display: flex; align-items: center; justify-content: center;">{{ n.num }}</div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div style="font-family: 'Jua', sans-serif; font-size: 17px;">{{ n.title }}</div>
+              <div style="font-size: 13.5px; line-height: 1.7; color: #55452F;">{{ n.body }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 RESULT SCREEN ============ -->
+  <section data-screen-label="결과 화면" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">06</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">결과 / 게임오버 화면</h2>
+    </div>
+    <div style="display: flex; gap: 48px; align-items: flex-start;">
+      <div style="width: 340px; flex-shrink: 0; background: #33261A; border-radius: 44px; padding: 12px; box-shadow: 10px 10px 0 rgba(51,38,26,0.25);">
+        <div style="border-radius: 34px; overflow: hidden; position: relative; height: 690px; background: #E4572E; display: flex; flex-direction: column; align-items: center; padding: 56px 24px 32px; box-sizing: border-box; gap: 20px;">
+          <div style="font-family: 'Jua', sans-serif; font-size: 34px; color: #FBF4E6; text-shadow: 3px 3px 0 #33261A;">와르르...!</div>
+          <!-- giant result chip -->
+          <div style="width: 240px; border: 3px solid #33261A; box-shadow: 6px 6px 0 #33261A; display: flex; flex-direction: column;">
+            <div style="height: 190px; background: #EDAA3C; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
+              <div style="font-family: 'Rammetto One', cursive; font-size: 72px; color: #33261A;">37</div>
+              <div style="font-family: 'Jua', sans-serif; font-size: 18px; color: #33261A;">칩을 쌓았어요</div>
+            </div>
+            <div style="background: #FBF4E6; border-top: 3px solid #33261A; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #33261A;">CC 037-C</div>
+              <div style="font-family: 'Jua', sans-serif; font-size: 14px; color: #55452F;">서울 · 스테이지 3 · 최고 기록!</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 18px; margin-top: 2px;">
+            <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 8px 16px; display: flex; flex-direction: column; align-items: center; gap: 0px;">
+              <span style="font-family: 'Rammetto One', cursive; font-size: 20px;">12</span>
+              <span style="font-family: 'Jua', sans-serif; font-size: 12px; color: #6b5947;">퍼펙트</span>
+            </div>
+            <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 8px 16px; display: flex; flex-direction: column; align-items: center; gap: 0px;">
+              <span style="font-family: 'Rammetto One', cursive; font-size: 20px;">x8</span>
+              <span style="font-family: 'Jua', sans-serif; font-size: 12px; color: #6b5947;">최다 콤보</span>
+            </div>
+          </div>
+          <div style="flex: 1;"></div>
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #FBF4E6; border: 3px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 15px; text-align: center; font-family: 'Jua', sans-serif; font-size: 22px; color: #33261A;">다시 쌓기</div>
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1; background: #1F7A72; border: 3px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 12px; text-align: center; font-family: 'Jua', sans-serif; font-size: 17px; color: #FBF4E6;">기록 공유</div>
+              <div style="flex: 1; background: #EDAA3C; border: 3px solid #33261A; box-shadow: 4px 4px 0 #33261A; padding: 12px; text-align: center; font-family: 'Jua', sans-serif; font-size: 17px; color: #33261A;">홈으로</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <sc-for list="{{ resultNotes }}" as="n" hint-placeholder-count="5">
+          <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #33261A; color: #FBF4E6; font-family: 'Rammetto One', cursive; font-size: 14px; display: flex; align-items: center; justify-content: center;">{{ n.num }}</div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div style="font-family: 'Jua', sans-serif; font-size: 17px;">{{ n.title }}</div>
+              <div style="font-size: 13.5px; line-height: 1.7; color: #55452F;">{{ n.body }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 STAGE / BACKGROUND SYSTEM ============ -->
+  <section data-screen-label="스테이지 배경 시스템" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">07</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">스테이지 · 배경 시스템</h2>
+      <span style="font-size: 15px; color: #6b5947;">"탑이 높아질수록 세계가 스크롤된다"</span>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 22px 28px; font-size: 14.5px; line-height: 1.8; color: #55452F;">
+      게임 조작은 터치 한 번뿐이므로, <strong style="color: #33261A;">지루함을 배경이 해결합니다.</strong> 나라(도시)를 선택하면 그 나라의 랜드마크·명물이 배경 레이어로 배치되고, 칩이 쌓여 탑이 높아질수록 카메라가 위로 올라가며 <strong style="color: #33261A;">지상 → 스카이라인 → 하늘 → 성층권 순으로 배경이 연속 스크롤</strong>됩니다. 10칩마다 새 랜드마크가 지나가 "다음엔 뭐가 나올까"라는 시각적 보상을 만듭니다. 배경 컬러는 각 스테이지의 시그니처 1색을 페이퍼 톤에 섞어 사용하고, 게임 칩 5색과 절대 겹치지 않게 채도를 30% 이하로 유지합니다.</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+      <sc-for list="{{ stages }}" as="st" hint-placeholder-count="3">
+        <div style="border: 3px solid #33261A; box-shadow: 5px 5px 0 #33261A; background: #FBF4E6; display: flex; flex-direction: column;">
+          <div style="height: 150px; position: relative; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; gap: 10px; padding-bottom: 0; background-color: {{ st.sky }};">
+            <div style="position: absolute; top: 16px; right: 20px; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #33261A; opacity: 0.8; background-color: {{ st.sun }};"></div>
+            <div style="width: 22px; height: 70px; opacity: 0.65; background-color: {{ st.bld }};"></div>
+            <div style="width: 34px; height: 104px; opacity: 0.65; background-color: {{ st.bld }}; clip-path: {{ st.shape }};"></div>
+            <div style="width: 26px; height: 56px; opacity: 0.65; background-color: {{ st.bld }};"></div>
+          </div>
+          <div style="border-top: 3px solid #33261A; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: 'Jua', sans-serif; font-size: 19px;">{{ st.name }}</span>
+              <span style="font-family: 'Rammetto One', cursive; font-size: 12px; color: #A93B2A;">{{ st.en }}</span>
+            </div>
+            <div style="font-size: 12.5px; line-height: 1.6; color: #6b5947;">{{ st.desc }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background: #33261A; border: 3px solid #33261A; padding: 24px 28px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-family: 'Jua', sans-serif; font-size: 18px; color: #FBF4E6;">고도(높이) 스크롤 구간 설계</div>
+      <div style="display: flex; border: 2px solid #FBF4E6;">
+        <div style="flex: 3; background: #6E7F3C; padding: 10px 14px; font-family: 'Jua', sans-serif; font-size: 13px; color: #FBF4E6; border-right: 2px solid #FBF4E6;">0-15칩 · 지상 (거리·간판·명물)</div>
+        <div style="flex: 3; background: #1F7A72; padding: 10px 14px; font-family: 'Jua', sans-serif; font-size: 13px; color: #FBF4E6; border-right: 2px solid #FBF4E6;">16-40칩 · 스카이라인 (랜드마크)</div>
+        <div style="flex: 2; background: #EDAA3C; padding: 10px 14px; font-family: 'Jua', sans-serif; font-size: 13px; color: #33261A; border-right: 2px solid #FBF4E6;">41-70칩 · 하늘 (구름·비행선)</div>
+        <div style="flex: 2; background: #E4572E; padding: 10px 14px; font-family: 'Jua', sans-serif; font-size: 13px; color: #FBF4E6;">71칩+ · 성층권 (별·위성)</div>
+      </div>
+      <div style="font-size: 13px; line-height: 1.7; color: #C9B592;">구간 전환 시 배경색이 2초에 걸쳐 크로스페이드되고, 짧은 축하 문구("서울 하늘 위로!")가 표시됩니다. 71칩 이상은 모든 스테이지 공통의 우주 구간으로, 최상위 기록 경쟁 구간입니다.</div>
+    </div>
+  </section>
+
+  <!-- ============ 08 MOTION ============ -->
+  <section data-screen-label="모션 가이드" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">08</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">모션 가이드</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+      <sc-for list="{{ motions }}" as="m" hint-placeholder-count="4">
+        <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px 24px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span style="font-family: 'Jua', sans-serif; font-size: 18px;">{{ m.title }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A93B2A;">{{ m.spec }}</span>
+          </div>
+          <div style="font-size: 13.5px; line-height: 1.7; color: #55452F;">{{ m.body }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ============ 09 SOUND ============ -->
+  <section data-screen-label="사운드 가이드" style="display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: baseline; gap: 16px; border-bottom: 3px solid #33261A; padding-bottom: 12px;">
+      <span style="font-family: 'Rammetto One', cursive; font-size: 22px; color: #A93B2A;">09</span>
+      <h2 style="margin: 0; font-family: 'Jua', sans-serif; font-size: 34px; font-weight: 400;">사운드 가이드</h2>
+      <span style="font-size: 15px; color: #6b5947;">화면 문구는 한글, 보이스는 영어</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <sc-for list="{{ sounds }}" as="s" hint-placeholder-count="6">
+        <div style="background: #FBF4E6; border: 2px solid #33261A; display: flex; align-items: center;">
+          <div style="width: 170px; flex-shrink: 0; padding: 14px 18px; font-family: 'Jua', sans-serif; font-size: 15px; border-right: 2px solid #33261A;">{{ s.when }}</div>
+          <div style="width: 190px; flex-shrink: 0; padding: 14px 18px; font-family: 'Rammetto One', cursive; font-size: 15px; color: #E4572E; border-right: 2px solid #33261A;">{{ s.vo }}</div>
+          <div style="padding: 14px 18px; font-size: 13.5px; line-height: 1.6; color: #55452F;">{{ s.sfx }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background: #FBF4E6; border: 2px solid #33261A; padding: 20px 28px; font-size: 14px; line-height: 1.8; color: #55452F;">
+      <strong style="color: #33261A;">톤 원칙</strong> — BGM은 70년대 라운지/보사노바 풍의 가벼운 루프(BPM 96-108), 스테이지마다 해당 나라 악기를 한 가지씩 얹습니다(서울: 꽹과리 액센트, 파리: 아코디언, 카이로: 우드 퍼커션). 보이스는 밝고 과장된 미국 게임쇼 아나운서 톤. 효과음은 전자음보다 <strong style="color: #33261A;">종이·나무 질감의 폴리(foley)</strong> 우선 — 색칠 카드가 실제로 떨어지는 물성을 들려줍니다.
+    </div>
+  </section>
+
+  <div style="text-align: center; font-size: 13px; color: #8a7660; padding-top: 8px;">CHIP! CHIP! 칩칩! — Brand &amp; UI Design Guide v1.0 · 2026</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1200}}">
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accentHue ?? 'orange';
+    const accents = {
+      orange: '#E4572E', teal: '#1F7A72', mustard: '#EDAA3C'
+    };
+    return {
+      accent: accents[accent] || accents.orange,
+      gameColors: [
+        { name: 'CC 165-C', kr: '주황 · 태양', hex: '#E4572E' },
+        { name: 'CC 130-C', kr: '겨자 · 전구', hex: '#EDAA3C' },
+        { name: 'CC 377-C', kr: '아보카도 · 잔디', hex: '#6E7F3C' },
+        { name: 'CC 322-C', kr: '청록 · 타일', hex: '#1F7A72' },
+        { name: 'CC 174-C', kr: '벽돌 · 지붕', hex: '#A93B2A' }
+      ],
+      stackChips: [
+        { hex: '#1F7A72', code: 'CC 322-C', offset: '0px' },
+        { hex: '#EDAA3C', code: 'CC 130-C', offset: '10px' },
+        { hex: '#A93B2A', code: 'CC 174-C', offset: '-8px' },
+        { hex: '#6E7F3C', code: 'CC 377-C', offset: '4px' }
+      ],
+      playNotes: [
+        { num: '1', title: 'HUD — 점수는 "칩 개수"', body: '추상적 점수 대신 쌓은 칩 개수를 그대로 표시. 좌측 점수 칩, 우측 스테이지 배지. 모두 잉크 외곽선 + 하드 섀도의 스티커 스타일.' },
+        { num: '2', title: '낙하 칩 — 좌우 스윙', body: '화면 상단에서 1.6초 주기로 좌우 왕복. 칩은 항상 색면 + 크림색 라벨(컬러 코드 + 한글 색이름) 구조를 유지해 브랜드의 핵심 오브젝트임을 각인.' },
+        { num: '3', title: '낙하 가이드라인', body: '점선(잉크 30% 투명도)으로 착지 지점을 예고. 초보자 배려 장치이며 설정에서 끌 수 있음(고수 모드).' },
+        { num: '4', title: '피드백 문구', body: '정확히 겹치면 "PERFECT!" 가 -6° 기울어진 스탬프 형태로 팝. 문구 위치는 스택 위 고정, 0.6초 후 사라짐.' },
+        { num: '5', title: '배경 = 진행도', body: '배경 랜드마크는 채도를 낮춘 페이퍼 톤(잉크 대비 50% 투명도)으로, 게임 오브젝트보다 항상 뒤로 물러나 있어야 함.' },
+        { num: '6', title: '터치 영역 = 화면 전체', body: '버튼 없음. 화면 어디를 터치해도 낙하. 하단 안내 문구는 첫 3회 플레이에만 노출.' }
+      ],
+      resultNotes: [
+        { num: '1', title: '실패도 귀엽게 — "와르르...!"', body: '"게임 오버" 같은 부정 언어 대신 의성어로 실패의 무게를 덜어냄. 배경은 강조색 오렌지 풀블리드로 감정 전환.' },
+        { num: '2', title: '기록 = 나만의 컬러칩', body: '최종 점수를 거대한 컬러칩 카드로 제시. 칩 번호(CC 037-C)가 점수와 연동되어 "37번째 색을 수집했다"는 수집 감성을 부여 — 공유 이미지로 그대로 사용.' },
+        { num: '3', title: '보조 통계는 2개까지', body: '퍼펙트 횟수, 최다 콤보만. 통계 과잉은 캐주얼 톤을 해침.' },
+        { num: '4', title: 'CTA 위계', body: '"다시 쌓기"가 유일한 크림색 대형 버튼(재도전 최우선). 공유·홈은 절반 크기의 보조 버튼.' },
+        { num: '5', title: '진입 모션', body: '결과 칩이 위에서 "툭" 떨어지며 등장(게임의 핵심 동작 재현). 이후 버튼이 아래에서 순차 슬라이드 업.' }
+      ],
+      stages: [
+        { name: '서울', en: 'SEOUL', sky: '#EFE3CB', sun: '#EDAA3C', bld: '#B3A07E', shape: 'polygon(50% 0, 100% 100%, 0 100%)', desc: '남산타워 · 궁궐 처마 · 한강 다리. 시그니처: 겨자색 노을.' },
+        { name: '파리', en: 'PARIS', sky: '#E8E4D8', sun: '#D9A0A8', bld: '#A8A091', shape: 'polygon(50% 0, 85% 100%, 15% 100%)', desc: '에펠탑 · 개선문 · 카페 차양. 시그니처: 로즈 그레이 하늘.' },
+        { name: '카이로', en: 'CAIRO', sky: '#F0DEBB', sun: '#E4572E', bld: '#C29B5F', shape: 'polygon(50% 0, 100% 100%, 0 100%)', desc: '피라미드 · 스핑크스 · 야자수. 시그니처: 사막 모래빛.' }
+      ],
+      motions: [
+        { title: '낙하', spec: '0.35s · ease-in', body: '터치 즉시 중력 가속으로 직하. 지연 없음 — 입력과 반응 사이 어떤 연출도 넣지 않는다(조작감 최우선).' },
+        { title: '착지 스쿼시', spec: '0.18s · 110%→100%', body: '착지 순간 가로 110% / 세로 88%로 눌렸다 복원. 스택 전체가 아래로 4px 출렁이며 무게감 전달.' },
+        { title: '퍼펙트 스탬프', spec: '0.25s · back-out', body: '문구가 140%에서 100%로 도장 찍히듯 축소 등장, -6° 고정 기울기. 연속 퍼펙트 시 색상이 5색 순환.' },
+        { title: '배경 스크롤', spec: '높이 연동 · 0.8s ease-out', body: '칩 착지마다 카메라가 칩 1개 높이만큼 상승. 배경 레이어는 3단 패럴랙스(0.3x / 0.6x / 1x).' },
+        { title: '실패 붕괴', spec: '0.9s · 물리 낙하', body: '어긋난 칩부터 회전하며 화면 밖으로 낙하. 슬로모션 금지 — 빠르게 무너지고 빠르게 결과 화면으로(재도전 루프 단축).' },
+        { title: '화면 전환', spec: '0.4s · 칩 와이프', body: '5색 칩 띠가 아래에서 위로 화면을 쓸어올리는 와이프. 모든 화면 전환에 공통 적용.' }
+      ],
+      sounds: [
+        { when: '칩 낙하 (터치)', vo: '—', sfx: '짧은 휘파람성 낙하음 (0.2s, 피치 다운)' },
+        { when: '착지 (일반)', vo: '—', sfx: '"톡" — 두꺼운 종이 카드가 나무에 닿는 폴리' },
+        { when: '착지 (퍼펙트)', vo: '"PERFECT!"', sfx: '"착!" + 밝은 마림바 단음. 콤보마다 반음씩 상승' },
+        { when: '콤보 x5 달성', vo: '"ON FIRE!"', sfx: '짧은 브라스 스팅 (라운지 밴드 톤)' },
+        { when: '고도 구간 전환', vo: '"GOING UP!"', sfx: '상승 글리산도 + 새/바람 앰비언스 교체' },
+        { when: '실패 (붕괴)', vo: '"OOPS!"', sfx: '카드 뭉치가 와르르 쏟아지는 폴리, 밝은 톤 유지' },
+        { when: '최고 기록 갱신', vo: '"NEW RECORD!"', sfx: '팡파레 2초 — 유일하게 화려함이 허용되는 순간' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

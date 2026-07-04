@@ -48,6 +48,44 @@
   button:active { transform: scale(.95); }
   #btnContinue { background: #E8B93E; }
 
+  button.ghost {
+    background: rgba(255,255,255,.18); color: #fff;
+    font-size: 16px; padding: 10px 30px; box-shadow: none;
+    border: 1px solid rgba(255,255,255,.4);
+  }
+
+  #nickRow { display: none; gap: 8px; align-items: center; }
+  #nickRow input {
+    font: inherit; font-size: 16px; width: 170px;
+    padding: 11px 16px; border: none; border-radius: 999px;
+    text-align: center; outline: none;
+  }
+  #nickRow button { font-size: 16px; padding: 11px 22px; background: #E8B93E; }
+
+  #boardTabs { display: flex; gap: 8px; }
+  #boardTabs .tab {
+    font-size: 15px; padding: 8px 22px; box-shadow: none;
+    background: rgba(255,255,255,.18); color: rgba(255,255,255,.8);
+    border: 1px solid rgba(255,255,255,.3);
+  }
+  #boardTabs .tab.active { background: #fff; color: #1c1c22; }
+
+  #boardList {
+    width: 78%; max-width: 420px; height: 46%;
+    overflow-y: auto; border-radius: 14px;
+    background: rgba(0,0,0,.25); padding: 8px 0;
+  }
+  .board-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; color: #fff; font-size: 15px;
+  }
+  .board-row .rank { width: 34px; text-align: right; font-weight: 800; opacity: .75; }
+  .board-row .nick { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-row .pts  { font-weight: 700; }
+  .board-row .ht   { width: 52px; text-align: right; font-size: 12px; opacity: .6; }
+  .board-row.me { background: rgba(232,185,62,.25); border-left: 3px solid #E8B93E; }
+  .board-msg { color: rgba(255,255,255,.75); padding: 30px 0; font-size: 15px; }
+
   #btnSound {
     position: absolute; top: 10px; right: 10px; z-index: 10;
     width: 44px; height: 44px; padding: 0;
@@ -84,6 +122,7 @@
       <div id="titleBest" class="stat"></div>
       <div id="titleStreak" class="stat"></div>
       <button id="btnStart">시작하기</button>
+      <button id="btnBoardTitle" class="ghost">🏆 랭킹</button>
     </div>
 
     <div id="result" class="overlay">
@@ -91,8 +130,24 @@
       <div id="resultScore" class="big">0</div>
       <div id="resultHeight" class="stat"></div>
       <div id="resultBest" class="stat"></div>
+      <div id="nickRow">
+        <input id="nickInput" maxlength="12" placeholder="닉네임 (2~12자)" autocomplete="off">
+        <button id="btnNickSave">등록</button>
+      </div>
       <button id="btnContinue">📺 광고 보고 이어하기</button>
       <button id="btnRestart">다시하기</button>
+      <button id="btnBoard" class="ghost">🏆 랭킹</button>
+    </div>
+
+    <div id="board" class="overlay">
+      <h1 style="font-size:30px">🏆 랭킹</h1>
+      <div id="boardTabs">
+        <button class="tab active" data-range="all">전체</button>
+        <button class="tab" data-range="day">일간</button>
+        <button class="tab" data-range="week">주간</button>
+      </div>
+      <div id="boardList"></div>
+      <button id="btnBoardClose" class="ghost">닫기</button>
     </div>
   </div>
 

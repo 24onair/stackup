@@ -2,9 +2,10 @@
 /* global Matter */
 import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState } from './physics.js';
 import { chipColor, randomStartIndex, bgColorFor, floorColorFor, textColorFor, oklchToHex, oklchLerp } from './colors.js';
-import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawCOMIndicator, drawChip, chipPalette } from './ui.js';
+import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage } from './ui.js';
 import { Ads } from './ads.js';
 import { Bgm } from './bgm.js';
+import { Leaderboard } from './leaderboard.js';
 
 // ─── 게임플레이 튜닝 상수 ────────────────────────────────
 const G = {
@@ -331,6 +332,7 @@ function gameOver(reason) {
   vibrate([30, 40, 60]);
   Ads.registerGameOver();
   Storage.recordRun(score, height);
+  if (Storage.data.nickname) Leaderboard.submit(Storage.data.nickname, score, height); // 비동기, 실패 무시
 }
 
 function doContinue() {
@@ -552,6 +554,7 @@ function updateJuice(rawDt) {
         isNewBest: score >= d.bestScore && score > 0,
         reason: gameOverReason,
         canContinue: !continueUsed && height > 0,
+        askNickname: Leaderboard.enabled && !d.nickname && score > 0,
       });
     }
   }
@@ -674,6 +677,42 @@ canvas.addEventListener('pointerdown', (e) => {
   drop();
 }, { passive: false });
 
+// ─── 랭킹보드 ────────────────────────────────────────────
+let boardRange = 'all';
+async function openBoard(range = boardRange) {
+  boardRange = range;
+  setBoardTab(range);
+  showBoard();
+  renderBoardMessage('불러오는 중…');
+  const rows = await Leaderboard.fetchTop(range);
+  renderBoard(rows, Storage.data.nickname);
+}
+
+function initBoardUI() {
+  const btnBoard = document.getElementById('btnBoard');
+  const btnBoardTitle = document.getElementById('btnBoardTitle');
+  if (!Leaderboard.enabled) { // 키 미설정 → 랭킹 UI 전체 숨김
+    btnBoard.style.display = 'none';
+    btnBoardTitle.style.display = 'none';
+    return;
+  }
+  btnBoard.addEventListener('click', () => openBoard());
+  btnBoardTitle.addEventListener('click', () => openBoard());
+  document.getElementById('btnBoardClose').addEventListener('click', hideBoard);
+  document.querySelectorAll('#boardTabs .tab').forEach((b) =>
+    b.addEventListener('click', () => openBoard(b.dataset.range)));
+
+  // 닉네임 1회 등록 → 방금 끝난 판 점수도 즉시 제출
+  document.getElementById('btnNickSave').addEventListener('click', () => {
+    const nick = document.getElementById('nickInput').value.trim();
+    if (nick.length < 2 || nick.length > 12) { document.getElementById('nickInput').placeholder = '2~12자로 입력하세요'; return; }
+    Storage.data.nickname = nick;
+    Storage.save();
+    document.getElementById('nickRow').style.display = 'none';
+    if (score > 0) Leaderboard.submit(nick, score, height);
+  });
+}
+
 // ─── BGM 음소거 토글 ─────────────────────────────────────
 const btnSound = document.getElementById('btnSound');
 function syncSoundBtn() { btnSound.textContent = Bgm.enabled ? '🔊' : '🔇'; }
@@ -686,6 +725,7 @@ btnSound.addEventListener('click', () => {
 // ─── 부팅 ────────────────────────────────────────────────
 Storage.load();
 syncSoundBtn();
+initBoardUI();
 showTitle();
 requestAnimationFrame(frame);
 
@@ -700,6 +740,7 @@ window.__CHROMA = {
   get cam() { return cam; },
   get adDebug() { return Ads.debugState; },
   get ads() { return Ads; },
+  get leaderboard() { return Leaderboard; },
   get bgm() { return { current: Bgm.current, enabled: Bgm.enabled, loaded: Object.keys(Bgm.buffers) }; },
   drop,
   forceGameOver: () => gameOver('디버그 게임오버'),

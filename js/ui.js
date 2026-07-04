@@ -6,7 +6,7 @@ import { oklchToHex } from './colors.js';
 const LS_KEY = 'chromaStack.v1';
 
 export const Storage = {
-  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0 },
+  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0, nickname: '' },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem(LS_KEY) || '{}')); } catch { /* 무시 */ }
     return this.data;
@@ -50,15 +50,59 @@ export function showTitle() {
 }
 export function hideTitle() { $('title').style.display = 'none'; }
 
-export function showResult({ score, height, best, isNewBest, reason, canContinue }) {
+export function showResult({ score, height, best, isNewBest, reason, canContinue, askNickname }) {
   $('resultReason').textContent = reason;
   $('resultScore').textContent = score;
   $('resultHeight').textContent = `높이 ${height}`;
   $('resultBest').textContent = isNewBest ? '🏆 신기록!' : `BEST ${best}`;
   $('btnContinue').style.display = canContinue ? 'block' : 'none';
+  $('nickRow').style.display = askNickname ? 'flex' : 'none'; // 랭킹 참여용 닉네임 1회 등록
   $('result').style.display = 'flex';
 }
 export function hideResult() { $('result').style.display = 'none'; }
+
+// ─── 랭킹 오버레이 ───────────────────────────────────────
+export function showBoard() { $('board').style.display = 'flex'; }
+export function hideBoard() { $('board').style.display = 'none'; }
+
+export function setBoardTab(range) {
+  document.querySelectorAll('#boardTabs .tab').forEach((b) =>
+    b.classList.toggle('active', b.dataset.range === range));
+}
+
+export function renderBoardMessage(msg) {
+  const list = $('boardList');
+  list.textContent = '';
+  const div = document.createElement('div');
+  div.className = 'board-msg';
+  div.textContent = msg;
+  list.appendChild(div);
+}
+
+/** rows: [{nickname, score, height}] — textContent 조립으로 XSS 차단 */
+export function renderBoard(rows, myNickname) {
+  const list = $('boardList');
+  list.textContent = '';
+  if (!rows || rows.length === 0) { renderBoardMessage(rows ? '아직 기록이 없습니다' : '랭킹을 불러오지 못했습니다'); return; }
+  rows.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'board-row' + (myNickname && r.nickname === myNickname ? ' me' : '');
+    const medal = ['🥇', '🥈', '🥉'][i];
+    const cells = [
+      ['rank', medal || String(i + 1)],
+      ['nick', r.nickname],
+      ['pts', String(r.score)],
+      ['ht', `h${r.height}`],
+    ];
+    for (const [cls, text] of cells) {
+      const el = document.createElement('span');
+      el.className = cls;
+      el.textContent = text;
+      row.appendChild(el);
+    }
+    list.appendChild(row);
+  });
+}
 
 // ─── 캔버스 HUD (스크린 공간) ────────────────────────────
 export function drawHUD(ctx, { score, height, best, combo, phaseName, textHex }) {
