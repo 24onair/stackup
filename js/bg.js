@@ -16,6 +16,7 @@ const DRAW_H = IMG_H * SCALE;            // ≈3000
 const VIEW_IMG = P.H / SCALE;            // 뷰포트가 덮는 이미지 px ≈1281
 const ALT_START = 8;                     // 시작 시 카메라 고도(칩) — altOf(0)
 const ALT_TOP = 90;                      // 이 고도에서 이미지 최상단 도달
+const SCRIM_ALPHA = 0.3;                 // 배경 흐림 30% — 낙하 칩 가독성
 const strip = new Image();
 let stripReady = false;
 strip.onload = () => { stripReady = true; };
@@ -85,6 +86,12 @@ export const Bg = {
       ctx.imageSmoothingEnabled = false; // nearest-neighbor — 픽셀아트 유지
       ctx.drawImage(strip, 0, sy, P.W, DRAW_H);
       ctx.imageSmoothingEnabled = prevSmooth;
+      // 배경 30% 흐리게 — 페이퍼 스크림으로 채도/대비를 낮춰 낙하 칩이 도드라지게.
+      // 밤 존은 페이퍼가 밝혀 대비가 죽으므로 INK 스크림으로 어둡게 흐린다.
+      ctx.globalAlpha = SCRIM_ALPHA;
+      ctx.fillStyle = alt > 71 ? T.INK : T.PAPER;
+      ctx.fillRect(0, 0, P.W, P.H);
+      ctx.globalAlpha = 1;
     }
 
     // 유성 (성층권, 10칩마다 0.6s — 픽셀 이미지 위 가벼운 액센트)

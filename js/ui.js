@@ -262,11 +262,15 @@ export function chipPalette(col, n) {
 }
 
 const HW = () => P.CHIP_W / 2, HH = () => P.CHIP_H / 2;
-const FACE_H = 50, LABEL_H = 22; // FACE_H + LABEL_H === P.CHIP_H
+// 색면:라벨 = 50:22 (가이드 비율) — P.CHIP_H에서 파생되어 칩 크기 변경 시 자동 스케일
+const LABEL_H = () => Math.round(P.CHIP_H * 22 / 72);
+const FACE_H = () => P.CHIP_H - LABEL_H();
+const LABEL_FONT = () => Math.round(9 * P.CHIP_H / 72); // 라벨 폰트도 비례
 
 export function drawChip(ctx, chip, { falling = false } = {}) {
   const b = chip.body;
   const hw = HW(), hh = HH();
+  const fh = FACE_H(), lh = LABEL_H();
   ctx.save();
   ctx.translate(b.position.x, b.position.y);
   ctx.rotate(b.angle);
@@ -288,24 +292,24 @@ export function drawChip(ctx, chip, { falling = false } = {}) {
   }
   // 색면
   ctx.fillStyle = chip.pal.hex;
-  ctx.fillRect(-hw, -hh, P.CHIP_W, FACE_H);
+  ctx.fillRect(-hw, -hh, P.CHIP_W, fh);
   // CREAM 라벨
   ctx.fillStyle = T.CREAM;
-  ctx.fillRect(-hw, -hh + FACE_H, P.CHIP_W, LABEL_H);
+  ctx.fillRect(-hw, -hh + fh, P.CHIP_W, lh);
   // 색면/라벨 구분선 + 외곽선 (3px INK, 몸체 안쪽 정렬)
   ctx.strokeStyle = T.INK;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(-hw, -hh + FACE_H);
-  ctx.lineTo(hw, -hh + FACE_H);
+  ctx.moveTo(-hw, -hh + fh);
+  ctx.lineTo(hw, -hh + fh);
   ctx.stroke();
   ctx.strokeRect(-hw + 1.5, -hh + 1.5, P.CHIP_W - 3, P.CHIP_H - 3);
   // 라벨 텍스트
   ctx.fillStyle = T.INK;
-  ctx.font = `500 9px ${T.F_MONO}`;
+  ctx.font = `500 ${LABEL_FONT()}px ${T.F_MONO}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(chip.pal.label, -hw + 8, -hh + FACE_H + LABEL_H / 2 + 1);
+  ctx.fillText(chip.pal.label, -hw + 10, -hh + fh + lh / 2 + 1);
   ctx.textBaseline = 'alphabetic';
   ctx.restore();
 }
