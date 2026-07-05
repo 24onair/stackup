@@ -1,7 +1,8 @@
 // ui.js — HUD/무게중심 인디케이터(캔버스) + 타이틀/결과/랭킹 오버레이(DOM) + localStorage
 import { P } from './physics.js';
 import { oklchToHex, chipColor } from './colors.js';
-import { T, chipCode, koreanColorName } from './theme.js';
+import { T, chipCode, colorName } from './theme.js';
+import { t } from './i18n.js';
 
 // ─── localStorage ────────────────────────────────────────
 const LS_KEY = 'chromaStack.v1';
@@ -32,24 +33,63 @@ export const Storage = {
     this.data.bestHeight = Math.max(this.data.bestHeight, height);
     this.save();
   },
+  /** 도메인 전환 마이그레이션(구 origin → 신 origin) 병합. 비파괴적:
+   *  최고 기록류는 큰 값 채택, 닉네임/스테이지는 로컬이 비어 있을 때만 이전. */
+  mergeMigrated(incoming) {
+    if (!incoming || typeof incoming !== 'object') return false;
+    const d = this.data;
+    const num = (v) => (Number.isFinite(+v) ? +v : 0);
+    d.bestScore  = Math.max(num(d.bestScore),  num(incoming.bestScore));
+    d.bestHeight = Math.max(num(d.bestHeight), num(incoming.bestHeight));
+    d.totalRuns  = Math.max(num(d.totalRuns),  num(incoming.totalRuns));
+    d.streakDays = Math.max(num(d.streakDays), num(incoming.streakDays));
+    d.tutorialCount = Math.max(num(d.tutorialCount), num(incoming.tutorialCount));
+    if (!d.nickname && incoming.nickname) d.nickname = String(incoming.nickname).slice(0, 24);
+    if (!d.stage && incoming.stage) d.stage = String(incoming.stage);
+    if (incoming.lastPlayDate && String(incoming.lastPlayDate) > (d.lastPlayDate || '')) d.lastPlayDate = String(incoming.lastPlayDate);
+    this.save();
+    return true;
+  },
 };
 
 // ─── DOM 오버레이 ────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 
-export function initOverlays({ onStart, onRestart, onHome, onShare }) {
+export function initOverlays({ onStart, onRestart, onHome, onShare, onDouble, onRevive }) {
   // null 방어 — 배포 직후 캐시 혼합(옛 HTML + 새 JS)에서도 부팅이 죽지 않게
   const on = (id, fn) => { const el = $(id); if (el && fn) el.addEventListener('click', fn); };
   on('btnStart', onStart);
   on('btnRestart', onRestart);
   on('btnHome', onHome);
   on('btnShare', onShare);
+  on('btnDouble', onDouble);
+  on('btnRevive', onRevive);
+}
+
+/** 결과 화면 "점수 2배" 버튼 표시 토글 */
+export function setDoubleBtn(show) {
+  const db = $('btnDouble');
+  if (db) db.style.display = show ? '' : 'none';
+}
+
+/** 결과 화면 "이어하기" 버튼 표시 토글 */
+export function setReviveBtn(show) {
+  const rb = $('btnRevive');
+  if (rb) rb.style.display = show ? '' : 'none';
+}
+
+/** 리워드 2배 적용 후 점수/메타 갱신 (높이는 불변) + 점수 팝 연출 */
+export function updateResultScore({ score, isNewBest, zoneName, height }) {
+  const el = $('resultScore');
+  el.textContent = score;
+  $('resultMeta').textContent = `${zoneName} · ${t('chips_unit', { n: height })}${isNewBest && score > 0 ? t('best_tag') : ''}`;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); // 리플로우로 애니 재생
 }
 
 export function showTitle() {
   const d = Storage.data;
-  $('titleBest').textContent = d.bestScore > 0 ? `🏆 BEST ${d.bestScore}점 · ${d.bestHeight}칩` : '';
-  $('titleStreak').textContent = d.streakDays >= 2 ? `🔥 ${d.streakDays}일 연속 플레이` : '';
+  $('titleBest').textContent = d.bestScore > 0 ? t('best', { score: d.bestScore, height: d.bestHeight }) : '';
+  $('titleStreak').textContent = d.streakDays >= 2 ? t('streak', { days: d.streakDays }) : '';
   $('title').style.display = 'flex';
 }
 export function hideTitle() { $('title').style.display = 'none'; }
@@ -57,10 +97,12 @@ export function hideTitle() { $('title').style.display = 'none'; }
 export function showResult({ score, height, isNewBest, askNickname, perfectCount, maxCombo, zoneName }) {
   $('resultScore').textContent = score;
   $('resultCode').textContent = chipCode(height); // 칩 번호 = 쌓은 칩 개수 (수집 컨셉)
-  $('resultMeta').textContent = `${zoneName} · ${height}칩${isNewBest && score > 0 ? ' · 최고 기록!' : ''}`;
+  $('resultMeta').textContent = `${zoneName} · ${t('chips_unit', { n: height })}${isNewBest && score > 0 ? t('best_tag') : ''}`;
   $('statPerfect').textContent = perfectCount;
   $('statCombo').textContent = `x${maxCombo}`;
   $('nickRow').style.display = askNickname ? 'flex' : 'none'; // 랭킹 참여용 닉네임 1회 등록
+  setDoubleBtn(score > 0); // 점수 있을 때만 2배 리워드 노출 (매 결과마다 초기화)
+  setReviveBtn(false);     // 기본 숨김 — main.js가 조건(판당 1회·스냅샷 유무)에 따라 노출
   const el = $('result');
   el.classList.remove('show');
   el.style.display = 'flex';
@@ -119,8 +161,8 @@ function boardRowEl(rank, r, my = false) {
   const cells = [
     ['rank', String(rank)],
     ['swatch', ''],
-    ['nick', my ? `나 (${r.nickname})` : r.nickname],
-    ['pts', `${r.score}점`],
+    ['nick', my ? t('me', { nick: r.nickname }) : r.nickname],
+    ['pts', t('pts', { score: r.score })],
   ];
   for (const [cls, text] of cells) {
     const el = document.createElement('span');
@@ -137,7 +179,7 @@ function boardRowEl(rank, r, my = false) {
 export function renderBoard(rows, myNickname, myFallback = null) {
   const podium = $('podium'), list = $('boardList'), myRow = $('myRow');
   podium.textContent = ''; list.textContent = ''; myRow.textContent = '';
-  if (!rows || rows.length === 0) { renderBoardMessage(rows ? '아직 기록이 없습니다' : '랭킹을 불러오지 못했습니다'); return; }
+  if (!rows || rows.length === 0) { renderBoardMessage(rows ? t('board_empty') : t('board_error')); return; }
 
   // 포디움: 배치 순서 2-1-3, 칩 높이 = 순위 (가이드: 겨자/청록/벽돌)
   const spec = [
@@ -164,7 +206,7 @@ export function renderBoard(rows, myNickname, myFallback = null) {
     const nick = document.createElement('span');
     nick.className = 'nick'; nick.textContent = r.nickname;
     const code = document.createElement('span');
-    code.className = 'code'; code.textContent = `${chipCode(r.height)} · ${r.score}점`;
+    code.className = 'code'; code.textContent = `${chipCode(r.height)} · ${t('pts', { score: r.score })}`;
     label.appendChild(nick); label.appendChild(code);
     pod.appendChild(face); pod.appendChild(label);
     podium.appendChild(pod);
@@ -199,7 +241,7 @@ export function drawHUD(ctx, { score, height, zoneName }) {
   ctx.fillText(String(score), 40, 68);
   ctx.font = `18px ${T.F_HEAD}`;
   ctx.fillStyle = T.SUBTLE;
-  ctx.fillText(`${height}칩`, 40 + scoreW - 74, 66);
+  ctx.fillText(t('chips_unit', { n: height }), 40 + scoreW - 74, 66);
 
   // 존 배지 (우상단)
   ctx.font = `20px ${T.F_HEAD}`;
@@ -214,10 +256,11 @@ export function drawHUD(ctx, { score, height, zoneName }) {
 export function drawTapHint(ctx) {
   ctx.font = `24px ${T.F_HEAD}`;
   ctx.textAlign = 'center';
+  const hint = t('tap_hint');
   ctx.fillStyle = T.INK;
-  ctx.fillText('화면을 터치해서 칩을 떨어뜨려요!', P.W / 2 + 2, P.H - 56 + 2);
+  ctx.fillText(hint, P.W / 2 + 2, P.H - 56 + 2);
   ctx.fillStyle = T.CREAM;
-  ctx.fillText('화면을 터치해서 칩을 떨어뜨려요!', P.W / 2, P.H - 56);
+  ctx.fillText(hint, P.W / 2, P.H - 56);
 }
 
 // ─── 무게중심 인디케이터 (월드 공간 — 카메라 변환 내부에서 호출) ──
@@ -257,7 +300,7 @@ export function drawCOMIndicator(ctx, sup, timeMs, night = false) {
 export function chipPalette(col, n) {
   return {
     hex: oklchToHex(col),
-    label: `${chipCode(n + 1)} ${koreanColorName(col.h)}`,
+    label: `${chipCode(n + 1)} ${colorName(col.h)}`,
   };
 }
 

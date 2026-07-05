@@ -27,7 +27,7 @@
     <p style="margin: 0; font-size: 15px; color: #55452F;">공통 규격 144×576 도트(5배 확대 720×2880) · 지상 → 스카이라인 → 하늘 → 성층권 · 성층권은 전 스테이지 공통</p>
   </section>
 
-  <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px;">
+  <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 16px;">
     <sc-for list="{{ cities }}" as="ct" hint-placeholder-count="6">
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; align-items: baseline; gap: 8px;">
@@ -65,7 +65,8 @@ class Component extends DCLogic {
         { kr: '카이로', en: 'CAIRO', src: 'assets/cairo-bg-pixel.png', desc: '오벨리스크 · 야자수 · 시장 천막 · 물항아리 / 피라미드 2기 · 스핑크스 · 나일 강 펠루카 돛단배' },
         { kr: '도쿄', en: 'TOKYO', src: 'assets/tokyo-bg-pixel.png', desc: '도리이 · 벚나무 · 라멘 포장마차 / 후지산 · 오층탑 · 도쿄타워 / 고이노보리 잉어 깃발' },
         { kr: '뉴욕', en: 'NEW YORK', src: 'assets/newyork-bg-pixel.png', desc: '핫도그 카트 · 소화전 / 자유의 여신상 · 엠파이어 스테이트 · 브루클린 브리지 / 비행선' },
-        { kr: '런던', en: 'LONDON', src: 'assets/london-bg-pixel.png', desc: '공중전화 부스 · 우체통 / 빅벤 · 런던아이 · 타워브리지 · 템스 강 / 안개빛 하늘 · 열기구' }
+        { kr: '런던', en: 'LONDON', src: 'assets/london-bg-pixel.png', desc: '공중전화 부스 · 우체통 / 빅벤 · 런던아이 · 타워브리지 · 템스 강 / 안개빛 하늘 · 열기구' },
+        { kr: '퀸즈타운', en: 'QUEENSTOWN', src: 'assets/queenstown-bg-pixel.png', desc: '버거 노점 · 키위새 · 루핀 꽃 · 카비지트리 / 리마커블스 설산 · 곤돌라 · 와카티푸 호수 증기선 / 패러글라이더' }
       ]
     };
   }

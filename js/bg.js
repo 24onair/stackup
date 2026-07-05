@@ -3,7 +3,7 @@
 // 가이드 규칙: nearest-neighbor(픽셀 유지), 가로 100%, chipCount 비례 세로 스크롤
 // (0칩 = 이미지 맨 아래, 최고 고도 = 맨 위). 존 색 페이드/토스트는 기존 높이 로직 유지.
 import { P } from './physics.js';
-import { T, stageAsset } from './theme.js';
+import { T, stageAsset, zoneToasts } from './theme.js';
 
 const CH = () => P.CHIP_H;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
@@ -62,7 +62,8 @@ export const Bg = {
 
   /** land()에서 호출 — 존 경계 축하 토스트 트리거 (전 도시 공통) */
   notifyHeight(h) {
-    const msgs = { 16: T.ZONE_TOASTS[0], 41: T.ZONE_TOASTS[1], 71: T.ZONE_TOASTS[2] };
+    const zt = zoneToasts();
+    const msgs = { 16: zt[0], 41: zt[1], 71: zt[2] };
     if (msgs[h]) {
       state.toast = { text: msgs[h], start: performance.now(), zone: true };
       if (this.onZoneUp) this.onZoneUp();

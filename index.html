@@ -61,6 +61,12 @@
   .btn-teal { background: #1F7A72; color: #FBF4E6; }
   .btn-mustard { background: #EDAA3C; color: #33261A; }
   .btn-half { flex: 1; font-size: 17px; padding: 12px 8px; }
+  #btnDouble { background: #E86A2C; color: #FBF4E6; font-size: 20px; }
+  #btnRevive { background: #1F7A72; color: #FBF4E6; font-size: 20px; animation: dblPulse 1.3s ease-in-out infinite; }
+  #btnRevive:active { animation: none; }
+  @keyframes dblPulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  #resultScore.pop { animation: scorePop 0.45s ease-out; }
+  @keyframes scorePop { 0% { transform: scale(1); } 40% { transform: scale(1.28); color: #E86A2C; } 100% { transform: scale(1); } }
 
   /* ── 타이틀 (로고 락업) ── */
   .logo-chips { display: flex; align-items: flex-end; margin-bottom: 4px; }
@@ -232,6 +238,20 @@
     font-size: 19px; line-height: 40px;
     border-width: 2px; box-shadow: 3px 3px 0 #33261A;
   }
+  /* ── 언어 토글 (좌상단, 사운드 버튼 대칭) ── */
+  #btnLang {
+    position: absolute; top: 6.5%; left: 12px; z-index: 30;
+    height: 44px; min-width: 44px; padding: 0 12px;
+    font-size: 16px; line-height: 40px;
+    border-width: 2px; box-shadow: 3px 3px 0 #33261A;
+  }
+
+  #privacyLink {
+    display: inline-block; margin-top: 14px;
+    font-family: 'Jua', sans-serif; font-size: 12px; letter-spacing: .3px;
+    color: #8a7860; text-decoration: none; border-bottom: 1px solid rgba(138,120,96,.4);
+  }
+  #privacyLink:hover { color: #55452F; }
 
   /* ── 광고 스텁 오버레이 (ads.js가 body에 생성) ── */
   #adOverlay {
@@ -252,7 +272,8 @@
 <body>
   <div id="wrap">
     <canvas id="game"></canvas>
-    <button id="btnSound" aria-label="사운드 켜기/끄기">🔊</button>
+    <button id="btnSound" data-i18n-aria="sound_toggle" aria-label="사운드 켜기/끄기">🔊</button>
+    <button id="btnLang" data-i18n="lang_switch">EN</button>
 
     <!-- 타이틀 -->
     <div id="title" class="overlay">
@@ -262,22 +283,23 @@
         <div class="logo-en">CHIP! CHIP!</div>
         <div class="logo-kr">칩칩!</div>
       </div>
-      <div class="tagline">한 번의 터치로 쌓는 컬러의 탑</div>
+      <div class="tagline" data-i18n="tagline">한 번의 터치로 쌓는 컬러의 탑</div>
       <div id="titleBest" class="stat-badge"></div>
       <div id="titleStreak" class="stat-badge"></div>
-      <div class="city-label">어느 도시에 쌓을까요?</div>
+      <div class="city-label" data-i18n="city_prompt">어느 도시에 쌓을까요?</div>
       <div id="citySelect"></div>
-      <button id="btnStart" class="btn-big">쌓아 볼까?</button>
-      <button id="btnBoardTitle" class="btn-teal">🏆 랭킹</button>
+      <button id="btnStart" class="btn-big" data-i18n="play">쌓아 볼까?</button>
+      <button id="btnBoardTitle" class="btn-teal" data-i18n="ranking">🏆 랭킹</button>
+      <a id="privacyLink" href="privacy.html" data-i18n="privacy">개인정보처리방침</a>
     </div>
 
     <!-- 결과 (와르르...!) -->
     <div id="result" class="overlay">
-      <div class="r-title">와르르...!</div>
+      <div class="r-title" data-i18n="crash">와르르...!</div>
       <div class="r-chip">
         <div class="r-face">
           <div id="resultScore">0</div>
-          <div class="r-face-sub">점을 모았어요</div>
+          <div class="r-face-sub" data-i18n="points_collected">점을 모았어요</div>
         </div>
         <div class="r-label">
           <div id="resultCode">CC 000-C</div>
@@ -285,19 +307,21 @@
         </div>
       </div>
       <div class="r-stats">
-        <div class="r-stat"><b id="statPerfect">0</b><label>퍼펙트</label></div>
-        <div class="r-stat"><b id="statCombo">x0</b><label>최다 콤보</label></div>
+        <div class="r-stat"><b id="statPerfect">0</b><label data-i18n="perfect">퍼펙트</label></div>
+        <div class="r-stat"><b id="statCombo">x0</b><label data-i18n="max_combo">최다 콤보</label></div>
       </div>
       <div id="nickRow">
-        <input id="nickInput" maxlength="12" placeholder="닉네임 (2~12자)" autocomplete="off">
-        <button id="btnNickSave">등록</button>
+        <input id="nickInput" maxlength="12" data-i18n-ph="nick_ph" placeholder="닉네임 (2~12자)" autocomplete="off">
+        <button id="btnNickSave" data-i18n="save">등록</button>
       </div>
       <div class="r-ctas">
-        <button id="btnRestart" class="btn-big">다시 쌓기</button>
+        <button id="btnRevive" class="btn-big" data-i18n="revive">❤️ 광고 보고 이어하기</button>
+        <button id="btnDouble" class="btn-big" data-i18n="double">🎬 광고 보고 점수 2배</button>
+        <button id="btnRestart" class="btn-big" data-i18n="play_again">다시 쌓기</button>
         <div class="r-row">
-          <button id="btnShare" class="btn-teal btn-half">기록 공유</button>
-          <button id="btnBoard" class="btn-half">🏆 랭킹</button>
-          <button id="btnHome" class="btn-mustard btn-half">홈으로</button>
+          <button id="btnShare" class="btn-teal btn-half" data-i18n="share">기록 공유</button>
+          <button id="btnBoard" class="btn-half" data-i18n="ranking">🏆 랭킹</button>
+          <button id="btnHome" class="btn-mustard btn-half" data-i18n="home">홈으로</button>
         </div>
       </div>
     </div>
@@ -306,13 +330,13 @@
     <div id="board" class="overlay">
       <div class="board-head">
         <button id="btnBoardClose">&lt;</button>
-        <h2>랭킹</h2>
+        <h2 data-i18n="ranking_plain">랭킹</h2>
         <div class="board-spacer"></div>
       </div>
       <div id="boardTabs">
-        <button class="tab active" data-range="day">오늘</button>
-        <button class="tab" data-range="week">주간</button>
-        <button class="tab" data-range="all">전체</button>
+        <button class="tab active" data-range="day" data-i18n="today">오늘</button>
+        <button class="tab" data-range="week" data-i18n="week">주간</button>
+        <button class="tab" data-range="all" data-i18n="all">전체</button>
       </div>
       <div id="podium"></div>
       <div id="boardList"></div>

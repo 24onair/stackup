@@ -2,12 +2,16 @@
 /* global Matter */
 import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState } from './physics.js';
 import { chipColor, randomStartIndex, oklchToHex } from './colors.js';
-import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe } from './ui.js';
+import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe, setDoubleBtn, setReviveBtn, updateResultScore } from './ui.js';
 import { Ads } from './ads.js';
 import { Bgm } from './bgm.js';
+import { Sample } from './sfx.js';
 import { Leaderboard } from './leaderboard.js';
-import { T, loadFonts, zoneIndex, zoneName, STAGES, stageById, stageAsset } from './theme.js';
+import { T, loadFonts, zoneIndex, zoneName, STAGES, stageById, stageAsset, stageLabel } from './theme.js';
+import { t, LANG, setLang } from './i18n.js';
 import { Bg } from './bg.js';
+import { runMigration } from './migrate.js';
+import { track } from './analytics.js';
 
 // ─── 게임플레이 튜닝 상수 ────────────────────────────────
 const G = {
@@ -74,6 +78,9 @@ let currentChip = null;  // 낙하 중(SETTLE)인 칩
 let mover = null;        // 조준 중인 키네마틱 칩
 let startAnchor = randomStartIndex();
 let score = 0, height = 0, combo = 0, newBestShown = false;
+let doubleUsed = false; // 결과 화면 "점수 2배" 리워드 사용 여부 (판마다 초기화)
+let reviveUsed = false; // "이어하기" 리워드 사용 여부 (런당 1회 — resetRun에서 초기화)
+let lastStable = null;  // 이어하기용 마지막 안정 상태 스냅샷 (drop 직전 캡처)
 let gameOverReason = '';
 let settle = { frames: 0, elapsed: 0 };
 let toppleTimer = 0;
@@ -96,6 +103,7 @@ function audio() {
   if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
   if (AC.state === 'suspended') AC.resume();
   Bgm.start(AC); // 첫 제스처에서 BGM 루프 시작 (이후 호출은 no-op)
+  Sample.start(AC); // 샘플 효과음 디코드 + 바람 앰비언스 시작 (이후 호출은 no-op)
   return AC;
 }
 
@@ -144,15 +152,9 @@ function noiseSweep({ from = 1200, to = 200, dur = 0.3, gain = 0.15, q = 1, dela
   } catch { /* 오디오 불가 환경 무시 */ }
 }
 
+// 신스 긴장/분위기 레이어 — 실제 녹음 효과음(sfx.js Sample)이 이벤트를 담당하고,
+// 아래는 그 위에 얹는 미묘한 긴장감 보조음(크리크/심박/니어미스/콤보 안정화)만 유지.
 const Sfx = {
-  // 낙하 휘슬 — 떨어지는 동안 음이 미끄러져 내려가며 결과를 기다리게 만든다
-  drop()      { tone(700, 0.35, 'sine', 0.05, 240); tone(300, 0.06, 'square', 0.04, 180); },
-  // 착지 = "톡" — 두꺼운 종이 카드가 나무에 닿는 폴리 (가이드: 종이·나무 질감)
-  land()      { noiseSweep({ from: 1800, to: 900, dur: 0.06, gain: 0.11, q: 3 });
-                tone(300, 0.05, 'triangle', 0.07, 220); },
-  perfect(k)  { const s = [0, 2, 4, 7, 9][Math.min(k - 1, 4)]; // 펜타토닉 상승, 5음 캡
-                const f = 523 * Math.pow(2, s / 12);
-                tone(f, 0.12, 'triangle', 0.12); tone(f * 2, 0.08, 'sine', 0.05, null, 0.03); },
   // 크리크 — 단2도 디튠 톱니 두 개가 함께 내려앉는 불협화음 (매번 피치가 조금씩 달라 살아있는 느낌)
   creak()     { const f = 55 + Math.random() * 25;
                 tone(f, 0.32, 'sawtooth', 0.05, f * 0.7);
@@ -164,17 +166,8 @@ const Sfx = {
   // 니어미스 복귀 — 바람이 훑고 지나간 뒤 안도의 한 음
   whoosh()    { noiseSweep({ from: 300, to: 2200, dur: 0.25, gain: 0.14, q: 2 });
                 tone(880, 0.15, 'sine', 0.05, null, 0.24); },
+  // 콤보 안정화(SET!) — 3연속 퍼펙트 보상
   set()       { tone(392, 0.2, 'triangle', 0.1); tone(523, 0.2, 'triangle', 0.1, null, 0.07); },
-  // 붕괴 — 카드 뭉치가 와르르 쏟아지는 폴리 (가이드: 밝은 톤 유지, 다크 러블 금지)
-  over()      { [420, 370, 330, 290, 260, 230].forEach((f, i) =>
-                  tone(f * (0.95 + (i % 3) * 0.04), 0.09, 'triangle', 0.09, f * 0.8, i * 0.055));
-                noiseSweep({ from: 2200, to: 700, dur: 0.45, gain: 0.1, q: 1.5 }); },
-  // 고도 구간 전환 — 상승 글리산도
-  zoneUp()    { tone(400, 0.5, 'sine', 0.09, 1100);
-                [523, 659, 784].forEach((f, i) => tone(f, 0.14, 'triangle', 0.07, null, 0.15 + i * 0.09)); },
-  // 콤보 x5 — 브라스풍 스팅
-  combo5()    { [262, 330, 392, 523].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.055, null, i * 0.04)); },
-  newBest()   { [660, 880, 1100].forEach((f, i) => tone(f, 0.15, 'triangle', 0.1, null, i * 0.08)); },
 };
 const vibrate = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch { /* */ } };
 
@@ -244,6 +237,7 @@ function updateMover(dtMs) {
 // ─── 드롭/착지 ───────────────────────────────────────────
 function drop() {
   if (state !== 'AIM' || !mover || mover.telegraph > 0) return;
+  snapshotStable(); // 이어하기용 — 이 드롭이 치명적이어도 되돌릴 마지막 안정 상태 확보
   const body = makeChipBody(mover.x, mover.y);
   Matter.Composite.add(world, body);
   // Y/대각선 페이즈 퍼펙트 조건: 낮은 지점(부드러운 착지)에서 릴리즈해야 함
@@ -256,7 +250,7 @@ function drop() {
   showTapHint = false;
   settle = { frames: 0, elapsed: 0 };
   state = 'SETTLE';
-  Sfx.drop();
+  Sample.play('chip_drop');
 }
 
 function land() {
@@ -277,7 +271,7 @@ function land() {
   camDip = G.CAM_DIP;              // 스택 전체 4px 출렁
   height++;
   score += G.SCORE_LAND;
-  Sfx.land();
+  // 착지음은 아래 퍼펙트/일반 분기에서 재생 (land_perfect / land_normal)
 
   // 퍼펙트 판정: 바로 아래 칩(또는 플랫폼 중앙)과의 x 오차
   const belowX = chips.length >= 2 ? chips[chips.length - 2].body.position.x : P.W / 2;
@@ -291,19 +285,22 @@ function land() {
     score += bonus;
     stamp(c.body.position.x, c.body.position.y - 90, combo); // PERFECT! 스탬프 (-6°, 5색 순환)
     ring(c.body.position.x, c.body.position.y);
-    Sfx.perfect(combo);
+    // 퍼펙트 착지음 — 콤보당 반음(2^(1/12)) 피치 상승, 8반음에서 캡
+    Sample.play('land_perfect', { rate: Math.pow(2, Math.min(combo - 1, 8) / 12) });
     vibrate(15);
-    if (combo === 5) Sfx.combo5();
+    if (combo === 5) Sample.play('combo_fire'); // 콤보 5 달성 순간 1회
     if (combo % G.STABILIZE_EVERY === 0) stabilize(c);
   } else {
     combo = 0;
+    Sample.play('land_normal'); // 일반 착지
   }
 
   // 신기록 순간 연출 (플레이 중에 축하)
   if (!newBestShown && Storage.data.bestScore > 0 && score > Storage.data.bestScore) {
     newBestShown = true;
     popup(P.W / 2, towerTopY(chips) - 160, '🏆 NEW BEST!', '#EDAA3C', 44);
-    Sfx.newBest();
+    Sample.play('new_record'); // 최고 기록 갱신 순간
+    track('new_best', { score, height, stage: Storage.data.stage });
   }
 
   Bg.notifyHeight(height);
@@ -337,12 +334,52 @@ function gameOver(reason) {
   const top = towerTopY(chips);
   cam.targetZoom = Math.min(1, 1204 / (P.FLOOR_Y - top + 180));
   cam.targetY = 0;
-  Sfx.over();
+  Sample.play('fail_collapse'); // 타워 붕괴(게임 오버)
   Bgm.duck(0.35); // 붕괴 순간 BGM을 낮춰 굉음/결과에 집중
   vibrate([30, 40, 60]);
   Ads.registerGameOver();
   Storage.recordRun(score, height);
+  track('game_over', { score, height, stage: Storage.data.stage, perfect: perfectCount, max_combo: maxCombo });
   if (Storage.data.nickname) Leaderboard.submit(Storage.data.nickname, score, height); // 비동기, 실패 무시
+}
+
+// ─── 이어하기(리워드) — 마지막 안정 상태 스냅샷/복원 ─────────
+// drop() 직전(AIM, 타워 정착)에 위치·각도·점수를 저장. 붕괴 시점엔 이미 칩이
+// 움직이므로 "직전 안정 상태"를 미리 확보해 둔다.
+function snapshotStable() {
+  lastStable = {
+    score, height, maxCombo, perfectCount,
+    chips: chips.filter((c) => !c.fallen).map((c) => ({
+      x: c.body.position.x, y: c.body.position.y, angle: c.body.angle,
+      n: c.n, col: c.col, pal: c.pal,
+    })),
+  };
+}
+
+// 스냅샷을 static(frozen) 타워로 재구성 → 재붕괴 불가, 실제 모양 유지. AIM으로 재개.
+function reviveFromStable() {
+  const snap = lastStable;
+  if (!snap) return;
+  for (const c of chips) Matter.Composite.remove(world, c.body);
+  if (currentChip) Matter.Composite.remove(world, currentChip.body);
+  chips = []; currentChip = null; mover = null;
+  popups = []; rings = []; stamps = []; floorHits.length = 0;
+  shakeAmp = 0; camDip = 0; slowmo.t = 0; newBestShown = false;
+  for (const s of snap.chips) {
+    const body = makeChipBody(s.x, s.y);
+    Matter.Body.setAngle(body, s.angle);
+    Matter.Body.setStatic(body, true);
+    Matter.Composite.add(world, body);
+    chips.push({ body, n: s.n, col: s.col, pal: s.pal, frozen: true, fallen: false, fallenMs: 0, wasTilted: false, gentle: false });
+  }
+  score = snap.score; height = snap.height;
+  perfectCount = snap.perfectCount; maxCombo = snap.maxCombo; combo = 0;
+  cam.zoom = 1; cam.targetZoom = 1;
+  cam.y = cam.targetY = Math.min(0, towerTopY(chips) - G.CAM_TOP_SCREEN_Y);
+  Bg.snap(cam.y);
+  Bgm.duck(1);
+  spawnMover();
+  state = 'AIM';
 }
 
 function resetRun(startHeight = DEBUG_START_HEIGHT) {
@@ -352,12 +389,14 @@ function resetRun(startHeight = DEBUG_START_HEIGHT) {
   score = 0; height = 0; combo = 0;
   perfectCount = 0; maxCombo = 0;
   newBestShown = false;
+  reviveUsed = false; lastStable = null; // 새 런 — 이어하기 초기화
   shakeAmp = 0; camDip = 0;
   slowmo.t = 0;
   popups = []; rings = []; stamps = []; floorHits.length = 0;
   cam.y = 0; cam.targetY = 0; cam.zoom = 1; cam.targetZoom = 1;
   startAnchor = randomStartIndex(); // 매 판 다른 컬러웨이
   Bg.snap(0);
+  Sample.setZone(zoneIndex(startHeight)); // 앰비언스를 시작 고도 존으로 리셋
   if (startHeight > 0) prebuildTower(startHeight);
   Bgm.duck(1);
   Storage.touchStreak();
@@ -388,13 +427,44 @@ function prebuildTower(n) {
 }
 
 initOverlays({
-  onStart: () => { audio(); wipe(() => { hideTitle(); resetRun(); }); },
+  onStart: () => { audio(); track('game_start', { source: 'title', stage: Storage.data.stage }); wipe(() => { hideTitle(); resetRun(); }); },
   onRestart: () => {
+    track('game_start', { source: 'restart', stage: Storage.data.stage });
     const go = () => wipe(() => { hideResult(); resetRun(); }); // 광고 먼저 → 와이프
     if (Ads.canShowInterstitial()) Ads.showInterstitial(go); else go();
   },
   onHome: () => wipe(() => { hideResult(); toTitle(); }),
   onShare: shareRecord,
+  // 리워드: 광고 시청 완료 시 이번 판 점수 2배 (판당 1회, 랭킹에도 반영)
+  onDouble: () => {
+    if (state !== 'RESULT' || score <= 0 || doubleUsed) return;
+    doubleUsed = true;
+    setDoubleBtn(false); // 중복 클릭 방지 — 즉시 숨김
+    Ads.showRewarded(
+      () => { // 시청 완료 → 보상
+        score *= 2;
+        Storage.recordRun(score, height); // 최고점 갱신(max)
+        const d = Storage.data;
+        const nb = score >= d.bestScore && score > 0;
+        updateResultScore({ score, isNewBest: nb, zoneName: zoneName(stageName, zoneIndex(height)), height });
+        Sample.play('new_record');
+        if (d.nickname) Leaderboard.submit(d.nickname, score, height); // 2배 점수 재제출(닉네임당 최고점 반영)
+      },
+      () => { doubleUsed = false; setDoubleBtn(true); }, // 취소/광고없음 → 재시도 허용
+      'double-score',
+    );
+  },
+  // 리워드: 광고 시청 완료 시 붕괴 직전 안정 상태로 부활 (런당 1회)
+  onRevive: () => {
+    if (state !== 'RESULT' || reviveUsed || !lastStable || lastStable.height < 1) return;
+    reviveUsed = true;
+    setReviveBtn(false); setDoubleBtn(false); // 진행 중 두 버튼 숨김
+    Ads.showRewarded(
+      () => wipe(() => { hideResult(); reviveFromStable(); }), // 시청 완료 → 부활
+      () => { reviveUsed = false; setReviveBtn(true); setDoubleBtn(score > 0 && !Ads.isDisabled); }, // 취소 → 복원
+      'revive',
+    );
+  },
 });
 
 // 홈으로 — 월드를 비우고 타이틀로 (스폰 없음)
@@ -413,13 +483,13 @@ function toTitle() {
 // 기록 공유 — Web Share, 미지원 시 클립보드 폴백
 async function shareRecord() {
   const btn = document.getElementById('btnShare');
-  const text = `CHIP! CHIP! 칩칩! 서울에서 ${height}칩 · ${score}점을 쌓았어요! 🏙️`;
+  const text = t('share_text', { city: stageName, height, score });
   const url = location.origin + location.pathname;
   try {
     if (navigator.share) { await navigator.share({ text, url }); return; }
     await navigator.clipboard.writeText(`${text} ${url}`);
-    btn.textContent = '복사됨!';
-    setTimeout(() => { btn.textContent = '기록 공유'; }, 1500);
+    btn.textContent = t('copied');
+    setTimeout(() => { btn.textContent = t('share'); }, 1500);
   } catch { /* 공유 취소 등 무시 */ }
 }
 
@@ -557,6 +627,7 @@ function updateJuice(rawDt) {
     toppleTimer -= rawDt;
     if (toppleTimer <= 0) {
       state = 'RESULT';
+      doubleUsed = false;
       const d = Storage.data;
       showResult({
         score, height,
@@ -565,6 +636,9 @@ function updateJuice(rawDt) {
         perfectCount, maxCombo,
         zoneName: zoneName(stageName, zoneIndex(height)),
       });
+      if (Ads.isDisabled) setDoubleBtn(false); // ?noads 개발 모드에선 2배 버튼 숨김
+      // 이어하기: 런당 1회 + 복원할 타워(높이≥1)가 있을 때만
+      setReviveBtn(!reviveUsed && !Ads.isDisabled && !!lastStable && lastStable.height >= 1);
     }
   }
 }
@@ -731,7 +805,7 @@ async function openBoard(range = boardRange) {
   boardRange = range;
   setBoardTab(range);
   showBoard();
-  renderBoardMessage('불러오는 중…');
+  renderBoardMessage(t('board_loading'));
   const rows = await Leaderboard.fetchTop(range);
   const d = Storage.data;
   // 탑100 밖 폴백은 올타임 기록만 신뢰 가능하므로 전체 탭에서만
@@ -757,7 +831,7 @@ function initBoardUI() {
   // 닉네임 1회 등록 → 방금 끝난 판 점수도 즉시 제출
   document.getElementById('btnNickSave')?.addEventListener('click', () => {
     const nick = document.getElementById('nickInput').value.trim();
-    if (nick.length < 2 || nick.length > 12) { document.getElementById('nickInput').placeholder = '2~12자로 입력하세요'; return; }
+    if (nick.length < 2 || nick.length > 12) { document.getElementById('nickInput').placeholder = t('nick_rule'); return; }
     Storage.data.nickname = nick;
     Storage.save();
     document.getElementById('nickRow').style.display = 'none';
@@ -768,7 +842,7 @@ function initBoardUI() {
 // ─── 도시(스테이지) 선택기 ───────────────────────────────
 function applyStage(id) {
   const s = stageById(id);
-  stageName = s.name;
+  stageName = stageLabel(s);
   Storage.data.stage = s.id;
   Storage.save();
   Bg.setStage(s.id);
@@ -788,7 +862,7 @@ function initCitySelect() {
     thumb.style.backgroundImage = `url(${stageAsset(s.id)})`;
     const name = document.createElement('span');
     name.className = 'city-name';
-    name.textContent = s.name;
+    name.textContent = stageLabel(s);
     card.appendChild(thumb);
     card.appendChild(name);
     card.addEventListener('click', () => {
@@ -805,19 +879,27 @@ function syncSoundBtn() { if (btnSound) btnSound.textContent = Bgm.enabled ? '�
 btnSound?.addEventListener('click', () => {
   audio(); // 첫 클릭이 이 버튼일 수도 있으므로 컨텍스트 보장
   Bgm.setEnabled(!Bgm.enabled);
+  Sample.setEnabled(Bgm.enabled); // 샘플 효과음·앰비언스도 같은 버튼으로 뮤트/복귀
   syncSoundBtn();
 });
 
+// ─── 언어 토글 (ko ⇄ en) — 저장 후 리로드 ────────────────
+document.getElementById('btnLang')?.addEventListener('click', () => setLang(LANG === 'ko' ? 'en' : 'ko'));
+
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-05b'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-05c'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
-stageName = stageById(Storage.data.stage).name;
+runMigration(); // 신 도메인 첫 방문 시 구 origin(github.io) 기록 이전 (비파괴적, 1회성)
+stageName = stageLabel(stageById(Storage.data.stage));
 Bg.setStage(Storage.data.stage);
 syncSoundBtn();
 initBoardUI();
 initCitySelect();
-Bg.onZoneUp = () => Sfx.zoneUp(); // 존 전환 토스트와 동기된 상승 글리산도
+Bg.onZoneUp = () => { // 고도 구간 전환 — 효과음 + 앰비언스 톤 변화
+  Sample.play('altitude_up');
+  Sample.setZone(zoneIndex(height));
+};
 showTitle();
 // 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 병렬 로드.
 // 주의: 루프 시작을 폰트에 블로킹하면 느린 네트워크에서 게임이 수 초간 멈춰
@@ -838,6 +920,8 @@ window.__CHROMA = {
   get ads() { return Ads; },
   get leaderboard() { return Leaderboard; },
   get bgm() { return { current: Bgm.current, enabled: Bgm.enabled, loaded: Object.keys(Bgm.buffers) }; },
+  get sfx() { return { enabled: Sample.enabled, loaded: Object.keys(Sample.buffers), ambience: !!Sample.ambSrc, zone: Sample.zone, ctx: Sample.ctx?.state }; },
+  play: (n, o) => Sample.play(n, o),
   drop,
   forceGameOver: () => gameOver('디버그 게임오버'),
   // QA: 탭이 백그라운드(rAF 정지)여도 시뮬레이션을 수동으로 진행

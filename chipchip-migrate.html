@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>chipchip migrate</title>
+</head>
+<body>
+<!--
+  ⚠️ 배포 위치 주의 ⚠️
+  이 파일은 반드시 "사용자페이지 저장소"(github.com/24onair/24onair.github.io)의 루트에 두어
+  https://24onair.github.io/chipchip-migrate.html 로 서비스되어야 한다.
+
+  게임 저장소(stackup)에 두면 커스텀 도메인(playchipchip.com) 리다이렉트 대상이 되어 무력화된다.
+  (이 파일이 게임 repo에 있는 것은 '원본 보관용'일 뿐 — 실제 동작은 사용자페이지 repo 사본이 한다.)
+
+  하는 일: 구 origin(24onair.github.io)의 게임 기록(localStorage: chromaStack.v1)을 읽어,
+           playchipchip.com 부모창에만 postMessage로 전달한다. 읽기 전용 · 비파괴적.
+-->
+<script>
+(function () {
+  // 신 도메인 후보(apex/www). 실제 부모 origin과 일치하는 대상에게만 전달된다.
+  var TARGETS = ['https://playchipchip.com', 'https://www.playchipchip.com'];
+  var payload = null;
+  try { payload = JSON.parse(localStorage.getItem('chromaStack.v1') || 'null'); } catch (e) { payload = null; }
+  function send() {
+    for (var i = 0; i < TARGETS.length; i++) {
+      try { parent.postMessage({ type: 'chipchip-migrate', payload: payload }, TARGETS[i]); } catch (e) { /* 무시 */ }
+    }
+  }
+  send();
+  setTimeout(send, 300); // 부모 리스너 부착 경합 방지용 재전송(수신 측은 1회만 처리)
+})();
+</script>
+</body>
+</html>
