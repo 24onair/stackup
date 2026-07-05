@@ -22,17 +22,36 @@ export const Leaderboard = {
   get enabled() { return !!(SUPABASE_URL && SUPABASE_ANON_KEY); },
   _cache: {}, // range → {at, rows}
 
-  /** 점수 제출 — 실패해도 게임 흐름을 방해하지 않는다 */
-  async submit(nickname, score, height) {
-    if (!this.enabled || !nickname || score <= 0) return false;
+  /** 닉네임 선점/개명 (랭킹 v2) — 'ok' | 'taken' | 'invalid' | 'error'
+   *  서버가 lower() 유니크로 소유권 관리. 같은 정체성(id+secret)이면 개명으로 처리. */
+  async claimNickname(playerId, secret, nickname) {
+    if (!this.enabled || !playerId || !secret) return 'error';
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_nickname`, {
         method: 'POST',
-        headers: { ...headers(), Prefer: 'return=minimal' },
-        body: JSON.stringify({ nickname, score, height }),
+        headers: headers(),
+        body: JSON.stringify({ p_id: playerId, p_secret: secret, p_nickname: nickname }),
+      });
+      if (!res.ok) return 'error';
+      const out = await res.json(); // 'ok' | 'taken' | 'invalid'
+      this._cache = {}; // 개명 시 표시명 갱신 반영
+      return typeof out === 'string' ? out : 'error';
+    } catch { return 'error'; }
+  },
+
+  /** 점수 제출 (랭킹 v2) — RPC가 secret 검증 + 서버측 새너티로 위변조 차단.
+   *  실패해도 게임 흐름을 방해하지 않는다. */
+  async submit(playerId, secret, score, height) {
+    if (!this.enabled || !playerId || !secret || score <= 0) return false;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_score`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ p_id: playerId, p_secret: secret, p_score: score, p_height: height }),
       });
       this._cache = {}; // 새 점수 반영 위해 캐시 무효화
-      return res.ok;
+      if (!res.ok) return false;
+      return (await res.json()) === true;
     } catch { return false; }
   },
 

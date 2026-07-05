@@ -8,10 +8,28 @@ import { t } from './i18n.js';
 const LS_KEY = 'chromaStack.v1';
 
 export const Storage = {
-  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0, nickname: '', stage: 'seoul' },
+  data: { bestScore: 0, bestHeight: 0, totalRuns: 0, lastPlayDate: '', streakDays: 0, nickname: '', stage: 'seoul', playerId: '', playerSecret: '', nickClaimed: false },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem(LS_KEY) || '{}')); } catch { /* 무시 */ }
     return this.data;
+  },
+  /** 익명 플레이어 정체성(랭킹 v2) — 닉네임 소유·점수 제출 검증용 (id, secret) UUID 쌍.
+   *  chromaStack.v1 안에 저장되므로 도메인 마이그레이션 브릿지에 자동 탑승한다. */
+  ensurePlayer() {
+    const d = this.data;
+    if (!d.playerId || !d.playerSecret) {
+      const uuid = () => {
+        try { if (crypto.randomUUID) return crypto.randomUUID(); } catch { /* 폴백 */ }
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      };
+      d.playerId = d.playerId || uuid();
+      d.playerSecret = d.playerSecret || uuid();
+      this.save();
+    }
+    return d;
   },
   save() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.data)); } catch { /* 무시 */ } },
   /** 판 시작 시 호출 — 일일 스트릭 갱신 */
@@ -44,6 +62,13 @@ export const Storage = {
     d.totalRuns  = Math.max(num(d.totalRuns),  num(incoming.totalRuns));
     d.streakDays = Math.max(num(d.streakDays), num(incoming.streakDays));
     d.tutorialCount = Math.max(num(d.tutorialCount), num(incoming.tutorialCount));
+    // 정체성 승계(랭킹 v2): 로컬이 아직 닉네임을 선점하지 않았을 때만 —
+    // 닉네임 소유권이 (playerId, secret)에 묶이므로 닉과 함께 통째로 넘어와야 한다.
+    if (!d.nickname && incoming.playerId && incoming.playerSecret) {
+      d.playerId = String(incoming.playerId).slice(0, 40);
+      d.playerSecret = String(incoming.playerSecret).slice(0, 40);
+      d.nickClaimed = !!incoming.nickClaimed;
+    }
     if (!d.nickname && incoming.nickname) d.nickname = String(incoming.nickname).slice(0, 24);
     if (!d.stage && incoming.stage) d.stage = String(incoming.stage);
     if (incoming.lastPlayDate && String(incoming.lastPlayDate) > (d.lastPlayDate || '')) d.lastPlayDate = String(incoming.lastPlayDate);
@@ -175,9 +200,10 @@ function boardRowEl(rank, r, my = false) {
   return row;
 }
 
-/** rows: [{nickname, score, height}] — 포디움(1–3위 칩 타워) + 리스트(4위~) + 내 순위 고정.
- *  myFallback: 탑100 밖일 때 하단 고정에 쓸 {score, height} (전체 탭 한정, 순위 '100+') */
-export function renderBoard(rows, myNickname, myFallback = null) {
+/** rows: [{nickname, score, height, player_id?}] — 포디움(1–3위) + 리스트(4위~) + 내 순위 고정.
+ *  myFallback: 탑100 밖일 때 하단 고정에 쓸 {score, height} (전체 탭 한정, 순위 '100+')
+ *  myPlayerId: 내 순위 매칭 우선 키(랭킹 v2) — 동명이인 오매칭 방지. 레거시 행은 닉네임 폴백. */
+export function renderBoard(rows, myNickname, myFallback = null, myPlayerId = '') {
   const podium = $('podium'), list = $('boardList'), myRow = $('myRow');
   podium.textContent = ''; list.textContent = ''; myRow.textContent = '';
   if (!rows || rows.length === 0) { renderBoardMessage(rows ? t('board_empty') : t('board_error')); return; }
@@ -217,8 +243,10 @@ export function renderBoard(rows, myNickname, myFallback = null) {
   rows.slice(3).forEach((r, i) => list.appendChild(boardRowEl(i + 4, r)));
 
   // 내 순위 — 하단 고정 (가이드: 항상 하단 sticky). 탑100 밖이면 '100+' 표기
+  // 매칭: player_id 일치 우선(정체성 기준) → 레거시 행(player_id 없음)만 닉네임 문자열 폴백
   if (myNickname) {
-    const idx = rows.findIndex((r) => r.nickname === myNickname);
+    const idx = rows.findIndex((r) =>
+      (myPlayerId && r.player_id) ? r.player_id === myPlayerId : r.nickname === myNickname);
     if (idx >= 0) myRow.appendChild(boardRowEl(idx + 1, rows[idx], true));
     else if (myFallback) myRow.appendChild(boardRowEl('100+', { nickname: myNickname, ...myFallback }, true));
   }

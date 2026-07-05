@@ -78,6 +78,7 @@ let currentChip = null;  // 낙하 중(SETTLE)인 칩
 let mover = null;        // 조준 중인 키네마틱 칩
 let startAnchor = randomStartIndex();
 let score = 0, height = 0, combo = 0, newBestShown = false;
+let trackedPhase = 1; // 페이즈 도달 이벤트 중복 방지 (런 단위)
 let doubleUsed = false; // 결과 화면 "점수 2배" 리워드 사용 여부 (판마다 초기화)
 let reviveUsed = false; // "이어하기" 리워드 사용 여부 (런당 1회 — resetRun에서 초기화)
 let gameOverReason = '';
@@ -187,6 +188,7 @@ function topChipX() {
 function spawnMover() {
   const n = height;
   const phase = phaseFor(n);
+  if (phase > trackedPhase) { trackedPhase = phase; track('phase_reached', { phase, height: n }); }
   const top = towerTopY(chips);
   const col = chipColor(n, startAnchor);
   const axis = phase === 1 ? 'x' : phase === 2 ? 'y' : phase === 3 ? (Math.random() < 0.5 ? 'x' : 'y') : 'xy';
@@ -338,7 +340,10 @@ function gameOver(reason) {
   Ads.registerGameOver();
   Storage.recordRun(score, height);
   track('game_over', { score, height, stage: Storage.data.stage, perfect: perfectCount, max_combo: maxCombo });
-  if (Storage.data.nickname) Leaderboard.submit(Storage.data.nickname, score, height); // 비동기, 실패 무시
+  if (Storage.data.nickname) { // 비동기, 실패 무시 — 랭킹 v2: 정체성(id+secret)으로 제출
+    const d = Storage.data;
+    Leaderboard.submit(d.playerId, d.playerSecret, score, height);
+  }
 }
 
 // ─── 이어하기(리워드) — 잔해 위 이어하기 ──────────────────────
@@ -399,6 +404,7 @@ function resetRun(startHeight = DEBUG_START_HEIGHT) {
   score = 0; height = 0; combo = 0;
   perfectCount = 0; maxCombo = 0;
   newBestShown = false;
+  trackedPhase = phaseFor(startHeight); // 디버그 점프 시작점 반영
   reviveUsed = false; // 새 런 — 이어하기 초기화
   shakeAmp = 0; camDip = 0;
   slowmo.t = 0;
@@ -437,7 +443,7 @@ function prebuildTower(n) {
 }
 
 initOverlays({
-  onStart: () => { audio(); track('game_start', { source: 'title', stage: Storage.data.stage }); wipe(() => { hideTitle(); resetRun(); }); },
+  onStart: () => { audio(); track('game_start', { source: 'title', stage: Storage.data.stage, total_runs: Storage.data.totalRuns }); wipe(() => { hideTitle(); resetRun(); }); },
   onRestart: () => {
     track('game_start', { source: 'restart', stage: Storage.data.stage });
     const go = () => wipe(() => { hideResult(); resetRun(); }); // 광고 먼저 → 와이프
@@ -458,7 +464,7 @@ initOverlays({
         const nb = score >= d.bestScore && score > 0;
         updateResultScore({ score, isNewBest: nb, zoneName: zoneName(stageName, zoneIndex(height)), height });
         Sample.play('new_record');
-        if (d.nickname) Leaderboard.submit(d.nickname, score, height); // 2배 점수 재제출(닉네임당 최고점 반영)
+        if (d.nickname) Leaderboard.submit(d.playerId, d.playerSecret, score, height); // 2배 점수 재제출(정체성당 최고점 반영)
       },
       () => { doubleUsed = false; setDoubleBtn(true); }, // 취소/광고없음 → 재시도 허용
       'double-score',
@@ -494,7 +500,8 @@ function toTitle() {
 async function shareRecord() {
   const btn = document.getElementById('btnShare');
   const text = t('share_text', { city: stageName, height, score });
-  const url = location.origin + location.pathname;
+  const url = location.origin + location.pathname + '?utm_source=share&utm_medium=social';
+  track('share_click', { score, height, stage: Storage.data.stage, method: navigator.share ? 'webshare' : 'clipboard' });
   try {
     if (navigator.share) { await navigator.share({ text, url }); return; }
     await navigator.clipboard.writeText(`${text} ${url}`);
@@ -820,7 +827,7 @@ async function openBoard(range = boardRange) {
   const d = Storage.data;
   // 탑100 밖 폴백은 올타임 기록만 신뢰 가능하므로 전체 탭에서만
   const myFallback = range === 'all' && d.bestScore > 0 ? { score: d.bestScore, height: d.bestHeight } : null;
-  renderBoard(rows, d.nickname, myFallback);
+  renderBoard(rows, d.nickname, myFallback, d.playerId);
 }
 
 function initBoardUI() {
@@ -838,15 +845,52 @@ function initBoardUI() {
   document.querySelectorAll('#boardTabs .tab').forEach((b) =>
     b.addEventListener('click', () => openBoard(b.dataset.range)));
 
-  // 닉네임 1회 등록 → 방금 끝난 판 점수도 즉시 제출
-  document.getElementById('btnNickSave')?.addEventListener('click', () => {
-    const nick = document.getElementById('nickInput').value.trim();
-    if (nick.length < 2 || nick.length > 12) { document.getElementById('nickInput').placeholder = t('nick_rule'); return; }
-    Storage.data.nickname = nick;
+  // 닉네임 1회 등록(랭킹 v2: 글로벌 선점) → 방금 끝난 판 점수도 즉시 제출
+  document.getElementById('btnNickSave')?.addEventListener('click', async () => {
+    const input = document.getElementById('nickInput');
+    const btn = document.getElementById('btnNickSave');
+    const nick = input.value.trim();
+    if (nick.length < 2 || nick.length > 12) { input.value = ''; input.placeholder = t('nick_rule'); return; }
+    const d = Storage.ensurePlayer();
+    btn.disabled = true;
+    const r = await Leaderboard.claimNickname(d.playerId, d.playerSecret, nick);
+    btn.disabled = false;
+    if (r === 'taken') {
+      // 이미 사용 중 — 추천 닉을 입력창에 채워 원터치 재시도 유도
+      input.value = nick.slice(0, 9) + Math.floor(100 + Math.random() * 900);
+      btn.textContent = t('nick_taken');
+      setTimeout(() => { btn.textContent = t('save'); }, 1600);
+      return;
+    }
+    if (r === 'invalid') { input.value = ''; input.placeholder = t('nick_rule'); return; }
+    // 'ok' = 선점 완료. 'error'(오프라인 등)는 로컬 저장만 — 다음 부팅 때 자동 재선점
+    d.nickname = nick;
+    d.nickClaimed = (r === 'ok');
     Storage.save();
     document.getElementById('nickRow').style.display = 'none';
-    if (score > 0) Leaderboard.submit(nick, score, height);
+    if (score > 0) Leaderboard.submit(d.playerId, d.playerSecret, score, height);
   });
+}
+
+// 랭킹 v2: 저장된 닉네임을 내 정체성으로 자동 선점 (레거시 유저 기득권 인정).
+// 남이 먼저 선점한 경우(다른 기기의 동명이인 등) 접미사 자동 개명 + 토스트 1회 안내.
+// 실패(오프라인 등)해도 게임 무영향 — 다음 부팅에 재시도.
+async function claimSavedNickname() {
+  const d = Storage.data;
+  if (!Leaderboard.enabled || !d.nickname || d.nickClaimed) return;
+  const r = await Leaderboard.claimNickname(d.playerId, d.playerSecret, d.nickname);
+  if (r === 'ok') { d.nickClaimed = true; Storage.save(); return; }
+  if (r !== 'taken') return; // 네트워크 오류 등 — 재시도는 다음 부팅에
+  for (let i = 0; i < 3; i++) {
+    const alt = d.nickname.slice(0, 9) + Math.floor(100 + Math.random() * 900);
+    const r2 = await Leaderboard.claimNickname(d.playerId, d.playerSecret, alt);
+    if (r2 === 'ok') {
+      d.nickname = alt; d.nickClaimed = true; Storage.save();
+      Bg.toast(t('nick_renamed', { s: alt }));
+      return;
+    }
+    if (r2 !== 'taken') return;
+  }
 }
 
 // ─── 도시(스테이지) 선택기 ───────────────────────────────
@@ -900,6 +944,8 @@ document.getElementById('btnLang')?.addEventListener('click', () => setLang(LANG
 const BUILD = 'chipchip-2026-07-05c'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
+Storage.ensurePlayer();     // 랭킹 v2: 익명 정체성(id+secret) 확보
+claimSavedNickname();       // 저장된 닉네임 자동 선점 (비차단, 실패 무해)
 runMigration(); // 신 도메인 첫 방문 시 구 origin(github.io) 기록 이전 (비파괴적, 1회성)
 stageName = stageLabel(stageById(Storage.data.stage));
 Bg.setStage(Storage.data.stage);

@@ -60,6 +60,9 @@ export const Bg = {
 
   snap(camY) { state.cur = targetColor(this.altOf(camY)).slice(); },
 
+  /** 일반 안내 토스트 (닉네임 자동 개명 등) — 존 토스트와 같은 연출 재사용, 3초 유지 */
+  toast(text) { state.toast = { text, start: performance.now(), zone: false, dur: 3000 }; },
+
   /** land()에서 호출 — 존 경계 축하 토스트 트리거 (전 도시 공통) */
   notifyHeight(h) {
     const zt = zoneToasts();
@@ -121,8 +124,9 @@ export const Bg = {
   drawOverlay(ctx, nowMs) {
     if (!state.toast) return;
     const age = nowMs - state.toast.start;
-    if (age > 1200) { state.toast = null; return; }
-    const a = age < 150 ? age / 150 : age > 1000 ? (1200 - age) / 200 : 1;
+    const dur = state.toast.dur || 1200;
+    if (age > dur) { state.toast = null; return; }
+    const a = age < 150 ? age / 150 : age > dur - 200 ? (dur - age) / 200 : 1;
     ctx.save();
     ctx.globalAlpha = a;
     ctx.font = `26px ${T.F_HEAD}`;
