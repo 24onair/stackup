@@ -28,9 +28,10 @@ export const T = {
   F_MONO: '"IBM Plex Mono", monospace',                   // 칩 코드 라벨
 };
 
-// 스테이지(도시) — 배경 픽셀 스트립 6종. 성층권 구간은 전 도시 공통. 기본 서울.
+// 스테이지(도시) — 배경 픽셀 스트립 8종. 성층권 구간은 전 도시 공통. 기본 서울.
 export const STAGES = [
   { id: 'seoul',      name: '서울',     en: 'Seoul' },
+  { id: 'mungyeong',  name: '문경',     en: 'Mungyeong' },
   { id: 'queenstown', name: '퀸즈타운', en: 'Queenstown' },
   { id: 'tokyo',      name: '도쿄',     en: 'Tokyo' },
   { id: 'paris',   name: '파리',   en: 'Paris' },
