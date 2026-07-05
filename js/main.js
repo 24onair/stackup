@@ -1,6 +1,6 @@
 // main.js — 게임 상태머신, 루프, 입력, 카메라, 이동 페이즈, 주스(연출/사운드)
 /* global Matter */
-import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState } from './physics.js';
+import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState, angleDeviationDeg } from './physics.js';
 import { chipColor, randomStartIndex, oklchToHex } from './colors.js';
 import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe, setDoubleBtn, setReviveBtn, updateResultScore } from './ui.js';
 import { Ads } from './ads.js';
@@ -80,7 +80,6 @@ let startAnchor = randomStartIndex();
 let score = 0, height = 0, combo = 0, newBestShown = false;
 let doubleUsed = false; // 결과 화면 "점수 2배" 리워드 사용 여부 (판마다 초기화)
 let reviveUsed = false; // "이어하기" 리워드 사용 여부 (런당 1회 — resetRun에서 초기화)
-let lastStable = null;  // 이어하기용 마지막 안정 상태 스냅샷 (drop 직전 캡처)
 let gameOverReason = '';
 let settle = { frames: 0, elapsed: 0 };
 let toppleTimer = 0;
@@ -237,7 +236,6 @@ function updateMover(dtMs) {
 // ─── 드롭/착지 ───────────────────────────────────────────
 function drop() {
   if (state !== 'AIM' || !mover || mover.telegraph > 0) return;
-  snapshotStable(); // 이어하기용 — 이 드롭이 치명적이어도 되돌릴 마지막 안정 상태 확보
   const body = makeChipBody(mover.x, mover.y);
   Matter.Composite.add(world, body);
   // Y/대각선 페이즈 퍼펙트 조건: 낮은 지점(부드러운 착지)에서 릴리즈해야 함
@@ -343,40 +341,52 @@ function gameOver(reason) {
   if (Storage.data.nickname) Leaderboard.submit(Storage.data.nickname, score, height); // 비동기, 실패 무시
 }
 
-// ─── 이어하기(리워드) — 마지막 안정 상태 스냅샷/복원 ─────────
-// drop() 직전(AIM, 타워 정착)에 위치·각도·점수를 저장. 붕괴 시점엔 이미 칩이
-// 움직이므로 "직전 안정 상태"를 미리 확보해 둔다.
-function snapshotStable() {
-  lastStable = {
-    score, height, maxCombo, perfectCount,
-    chips: chips.filter((c) => !c.fallen).map((c) => ({
-      x: c.body.position.x, y: c.body.position.y, angle: c.body.angle,
-      n: c.n, col: c.col, pal: c.pal,
-    })),
-  };
+// ─── 이어하기(리워드) — 잔해 위 이어하기 ──────────────────────
+// 붕괴는 끝까지 진행하고, 쓰러진 칩과 그 위쪽만 제거한 뒤 살아남은 타워
+// (동결부 + 아직 서 있는 활성 칩)에서 물리 상태 그대로 재개한다.
+// 점수는 획득분 보존(착지당 +10 고정 — 높이 미반영), 높이는 실제 손실.
+// → "시간 되감기"가 아니라 "잔해 수습": 물리 연속성 유지 + 공정한 패널티.
+
+// 잔해 절단점: 착지순 배열을 아래에서 위로 스캔해 "아직 타워로 서 있는" prefix 길이 반환.
+// fallen 플래그는 gameOver 시점에 동결되므로(checkToppleAndSettle이 AIM/SETTLE 전용)
+// TOPPLING 연출 동안 움직인 body의 현재 상태(각도·내려앉음)로 함께 판정한다.
+function wreckageCut() {
+  for (let i = 0; i < chips.length; i++) {
+    const c = chips[i];
+    if (c.fallen) return i;
+    if (c.frozen) continue;                            // 동결 칩은 항상 생존
+    if (angleDeviationDeg(c.body) > 25) return i;      // 심하게 기움 — 사실상 쓰러짐
+    const below = i >= 1 ? chips[i - 1] : null;        // 아래 칩 이하로 내려앉음 = 스택 이탈
+    if (below && c.body.position.y > below.body.position.y - 4) return i;
+    if (c.body.position.y > P.KILL_Y) return i;
+  }
+  return chips.length;
 }
 
-// 스냅샷을 static(frozen) 타워로 재구성 → 재붕괴 불가, 실제 모양 유지. AIM으로 재개.
-function reviveFromStable() {
-  const snap = lastStable;
-  if (!snap) return;
-  for (const c of chips) Matter.Composite.remove(world, c.body);
-  if (currentChip) Matter.Composite.remove(world, currentChip.body);
-  chips = []; currentChip = null; mover = null;
+function reviveFromWreckage() {
+  const cut = wreckageCut();
+  if (cut < 1) return; // 생존자 없음 (게이팅이 막지만 안전망)
+  const removed = chips.slice(cut);
+  for (const c of removed) Matter.Composite.remove(world, c.body);
+  if (currentChip) { Matter.Composite.remove(world, currentChip.body); currentChip = null; }
+  chips = chips.slice(0, cut);
+  mover = null;
   popups = []; rings = []; stamps = []; floorHits.length = 0;
-  shakeAmp = 0; camDip = 0; slowmo.t = 0; newBestShown = false;
-  for (const s of snap.chips) {
-    const body = makeChipBody(s.x, s.y);
-    Matter.Body.setAngle(body, s.angle);
-    Matter.Body.setStatic(body, true);
-    Matter.Composite.add(world, body);
-    chips.push({ body, n: s.n, col: s.col, pal: s.pal, frozen: true, fallen: false, fallenMs: 0, wasTilted: false, gentle: false });
+  shakeAmp = 0; camDip = 0; slowmo.t = 0;
+  // 생존 활성 칩 진정 — stabilize()와 같은 감쇠 + 전도 타이머 리셋
+  for (const c of chips) {
+    if (c.frozen) continue;
+    c.fallenMs = 0; c.wasTilted = false;
+    Matter.Body.setAngularVelocity(c.body, c.body.angularVelocity * 0.4);
+    Matter.Body.setVelocity(c.body, { x: c.body.velocity.x * 0.6, y: c.body.velocity.y * 0.6 });
   }
-  score = snap.score; height = snap.height;
-  perfectCount = snap.perfectCount; maxCombo = snap.maxCombo; combo = 0;
+  height = chips.length;
+  combo = 0; // score·perfectCount·maxCombo는 획득분 그대로 유지
+  track('revive', { kept: height, lost: removed.length, score });
   cam.zoom = 1; cam.targetZoom = 1;
   cam.y = cam.targetY = Math.min(0, towerTopY(chips) - G.CAM_TOP_SCREEN_Y);
   Bg.snap(cam.y);
+  Sample.setZone(zoneIndex(height)); // 앰비언스를 생존 고도 존으로 재동기화
   Bgm.duck(1);
   spawnMover();
   state = 'AIM';
@@ -389,7 +399,7 @@ function resetRun(startHeight = DEBUG_START_HEIGHT) {
   score = 0; height = 0; combo = 0;
   perfectCount = 0; maxCombo = 0;
   newBestShown = false;
-  reviveUsed = false; lastStable = null; // 새 런 — 이어하기 초기화
+  reviveUsed = false; // 새 런 — 이어하기 초기화
   shakeAmp = 0; camDip = 0;
   slowmo.t = 0;
   popups = []; rings = []; stamps = []; floorHits.length = 0;
@@ -454,13 +464,13 @@ initOverlays({
       'double-score',
     );
   },
-  // 리워드: 광고 시청 완료 시 붕괴 직전 안정 상태로 부활 (런당 1회)
+  // 리워드: 광고 시청 완료 시 잔해 위에서 이어하기 (런당 1회)
   onRevive: () => {
-    if (state !== 'RESULT' || reviveUsed || !lastStable || lastStable.height < 1) return;
+    if (state !== 'RESULT' || reviveUsed || wreckageCut() < 1) return;
     reviveUsed = true;
     setReviveBtn(false); setDoubleBtn(false); // 진행 중 두 버튼 숨김
     Ads.showRewarded(
-      () => wipe(() => { hideResult(); reviveFromStable(); }), // 시청 완료 → 부활
+      () => wipe(() => { hideResult(); reviveFromWreckage(); }), // 시청 완료 → 잔해 수습 후 재개
       () => { reviveUsed = false; setReviveBtn(true); setDoubleBtn(score > 0 && !Ads.isDisabled); }, // 취소 → 복원
       'revive',
     );
@@ -637,8 +647,8 @@ function updateJuice(rawDt) {
         zoneName: zoneName(stageName, zoneIndex(height)),
       });
       if (Ads.isDisabled) setDoubleBtn(false); // ?noads 개발 모드에선 2배 버튼 숨김
-      // 이어하기: 런당 1회 + 복원할 타워(높이≥1)가 있을 때만
-      setReviveBtn(!reviveUsed && !Ads.isDisabled && !!lastStable && lastStable.height >= 1);
+      // 이어하기: 런당 1회 + 잔해에 생존 타워(≥1칩)가 있을 때만
+      setReviveBtn(!reviveUsed && !Ads.isDisabled && wreckageCut() >= 1);
     }
   }
 }
