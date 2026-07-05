@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /chipchip-migrate.html
+
+Sitemap: https://playchipchip.com/sitemap.xml

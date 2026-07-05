@@ -1,0 +1,17 @@
+{
+  "name": "CHIP! CHIP! 칩칩!",
+  "short_name": "CHIP! CHIP!",
+  "description": "한 번의 터치로 쌓는 컬러의 탑 — One-tap physics color stacking",
+  "start_url": "./?utm_source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#33261A",
+  "theme_color": "#33261A",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
