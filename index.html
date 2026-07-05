@@ -394,8 +394,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
   <script type="module" src="js/main.js"></script>
   <script>
-    // PWA — https에서만 등록 (로컬 http.server 개발 흐름 방해 금지)
-    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    // PWA — 프로덕션 도메인에서만 등록 (로컬 개발·포털 임베드(itch/CrazyGames 등)에선 SW 캐시 미개입)
+    if ('serviceWorker' in navigator
+        && ['playchipchip.com', 'www.playchipchip.com'].includes(location.hostname)) {
       addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
     }
   </script>
