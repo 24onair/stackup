@@ -133,8 +133,9 @@ export function wipe(midCb) {
 }
 
 // ─── 랭킹 오버레이 ───────────────────────────────────────
-export function showBoard() { $('board').style.display = 'flex'; }
-export function hideBoard() { $('board').style.display = 'none'; }
+// 랭킹 열림 동안 전역 버튼(언어/사운드) 숨김 — 보드 자체 헤더(닫기 버튼)와 겹침 방지
+export function showBoard() { $('board').style.display = 'flex'; document.body.classList.add('board-open'); }
+export function hideBoard() { $('board').style.display = 'none'; document.body.classList.remove('board-open'); }
 
 export function setBoardTab(range) {
   document.querySelectorAll('#boardTabs .tab').forEach((b) =>

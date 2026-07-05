@@ -246,6 +246,9 @@
     border-width: 2px; box-shadow: 3px 3px 0 #33261A;
   }
 
+  /* 랭킹 보드 열림 중엔 전역 버튼 숨김 (보드 자체 닫기 버튼과 겹침 방지) */
+  body.board-open #btnLang, body.board-open #btnSound { display: none; }
+
   #privacyLink {
     display: inline-block; margin-top: 14px;
     font-family: 'Jua', sans-serif; font-size: 12px; letter-spacing: .3px;
