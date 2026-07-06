@@ -29,12 +29,22 @@
   .toc { font-size: 14px; }
   footer { margin-top: 44px; color: var(--sub); font-size: 13px; }
   .back { display: inline-block; margin-top: 8px; font-weight: 700; text-decoration: none; color: var(--ink); border: 2px solid var(--ink); border-radius: 8px; padding: 6px 14px; box-shadow: 3px 3px 0 var(--ink); }
+  nav.site { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 14px; font-weight: 700; }
+  nav.site a { color: var(--teal); text-decoration: none; }
+  nav.site a[aria-current] { color: var(--orange); text-decoration: underline; }
+  :root { --orange:#E4572E; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand"><span class="chips"><i></i><i></i><i></i></span> CHIP! CHIP! 칩칩!</div>
+    <a class="brand" href="/" style="text-decoration:none;color:var(--ink)"><span class="chips"><i></i><i></i><i></i></span> CHIP! CHIP! 칩칩!</a>
+    <nav class="site">
+      <a href="/">▶ Play</a>
+      <a href="how-to-play.html">How to Play</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html" aria-current="page">Privacy</a>
+    </nav>
   </header>
 
   <!-- ───────────────── English ───────────────── -->

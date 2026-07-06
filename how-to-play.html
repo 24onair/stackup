@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Play · CHIP! CHIP! — one-tap physics stacking game</title>
+<meta name="description" content="Full guide to CHIP! CHIP! — how to drop chips, land perfects, build combos, climb altitude zones, use revive and double-score, and top the global leaderboard.">
+<link rel="canonical" href="https://playchipchip.com/how-to-play.html">
+<style>
+  :root { --paper:#F3E9D7; --ink:#33261A; --cream:#FBF4E6; --teal:#1F7A72; --orange:#E4572E; --mustard:#EDAA3C; --sub:#6b5947; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:760px; margin:0 auto; padding:32px 22px 80px; }
+  header { border-bottom:3px solid var(--ink); padding-bottom:16px; margin-bottom:8px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; letter-spacing:-0.5px; text-decoration:none; color:var(--ink); }
+  .chips { display:inline-flex; }
+  .chips i { width:16px; height:16px; border-radius:4px; border:2px solid var(--ink); display:inline-block; }
+  .chips i:nth-child(1){ background:#1F7A72 } .chips i:nth-child(2){ background:#EDAA3C; margin-left:-6px } .chips i:nth-child(3){ background:#E4572E; margin-left:-6px }
+  nav.site { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:12px; font-size:14px; font-weight:700; }
+  nav.site a { color:var(--teal); text-decoration:none; }
+  nav.site a[aria-current] { color:var(--orange); text-decoration:underline; }
+  h1 { font-size:28px; margin:26px 0 4px; }
+  h2 { font-size:20px; margin:34px 0 6px; }
+  h3 { font-size:16px; margin:18px 0 2px; }
+  .meta { color:var(--sub); font-size:13px; }
+  a { color:var(--teal); }
+  ul, ol { padding-left:22px; }
+  li { margin:5px 0; }
+  .card { background:var(--cream); border:2px solid var(--ink); box-shadow:4px 4px 0 var(--ink); border-radius:12px; padding:16px 18px; margin:18px 0; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:14px; }
+  th, td { border:2px solid var(--ink); padding:8px 10px; text-align:left; }
+  th { background:var(--teal); color:var(--cream); }
+  .lang-sep { margin:52px 0 0; border:none; border-top:2px dashed var(--sub); }
+  .cta { display:inline-block; margin:22px 0 0; font-weight:800; font-size:18px; text-decoration:none;
+    color:var(--cream); background:var(--orange); border:3px solid var(--ink); border-radius:10px;
+    padding:12px 26px; box-shadow:5px 5px 0 var(--ink); }
+  footer { margin-top:44px; color:var(--sub); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/"><span class="chips"><i></i><i></i><i></i></span> CHIP! CHIP! 칩칩!</a>
+    <nav class="site">
+      <a href="/">▶ Play</a>
+      <a href="how-to-play.html" aria-current="page">How to Play</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </header>
+
+  <!-- ───────────────── English ───────────────── -->
+  <h1>How to Play CHIP! CHIP!</h1>
+  <p class="meta">A complete guide to stacking, combos, altitude zones, and climbing the global leaderboard.</p>
+
+  <p>CHIP! CHIP! is a one-tap stacking game built on a real physics engine. A colored chip swings back and
+  forth above your tower. Tap anywhere on the screen and the chip drops straight down. Land it cleanly and
+  your tower grows. Land it sloppily and the tower leans, wobbles, and eventually comes crashing down.
+  There is exactly one control: <strong>tap to drop</strong>. Everything else is timing, nerve, and physics.</p>
+
+  <h2>The one rule: tap to drop</h2>
+  <ul>
+    <li>A chip hovers and moves above the top of your tower. Watch its motion.</li>
+    <li>Tap the screen (anywhere) to release it. There is no aim button and no delay — the chip falls the instant you tap.</li>
+    <li>The chip is a real physical body. It can slide, tip, and knock the tower off balance if it lands off-center.</li>
+    <li>Stack as high as you can. Your score is how many chips you successfully stack, plus perfect-landing bonuses.</li>
+  </ul>
+
+  <h2>Perfect landings &amp; combos</h2>
+  <p>Line the falling chip up directly over the chip below it. If the horizontal offset is within the perfect
+  window, you score a <strong>PERFECT!</strong> — a stamp pops, the chip locks in cleanly, and your combo counter
+  climbs. Consecutive perfects multiply your bonus, so a clean streak is worth far more than sloppy stacking.</p>
+  <ul>
+    <li><strong>Base landing:</strong> +10 points per chip.</li>
+    <li><strong>Perfect bonus:</strong> +30 × current combo (combo multiplier caps at 5).</li>
+    <li><strong>Three perfects in a row</strong> trigger a "SET!" stabilize — your active chips settle down, buying you breathing room on a tall, shaky tower.</li>
+    <li>A single sloppy landing resets your combo to zero, so protect your streak.</li>
+  </ul>
+
+  <h2>Altitude zones — the climb</h2>
+  <p>As your tower rises, the camera climbs with it and the background scrolls through four altitude zones.
+  Each city has hand-made pixel-art backdrops, but every city shares the same four-stage climb:</p>
+  <table>
+    <tr><th>Zone</th><th>Height (chips)</th><th>What you'll see</th></tr>
+    <tr><td>Ground</td><td>0–15</td><td>Streets, landmarks, trees, market stalls</td></tr>
+    <tr><td>Skyline</td><td>16–40</td><td>Towers, bridges, the city skyline at dusk</td></tr>
+    <tr><td>Sky</td><td>41–70</td><td>Clouds, hot-air balloons, kites — a calmer stretch</td></tr>
+    <tr><td>Stratosphere</td><td>71+</td><td>Stars, a crescent moon, a satellite — night sky</td></tr>
+  </table>
+  <p>Crossing into a new zone fires a short celebration toast and a rising sound. The zones are your milestones —
+  reaching the stratosphere is a real achievement.</p>
+
+  <h2>Difficulty phases</h2>
+  <p>The chip's movement changes as you climb, so the game keeps getting harder without ever adding a second button:</p>
+  <ol>
+    <li><strong>Phase 1 — horizontal swing:</strong> the chip slides left and right. Time the tap.</li>
+    <li><strong>Phase 2 — vertical drop:</strong> the chip also bobs up and down; release low for a soft, accurate landing.</li>
+    <li><strong>Phase 3 — random:</strong> the axis is announced with a quick telegraph, then it moves.</li>
+    <li><strong>Phase 4 — diagonal:</strong> the chip traces a diagonal path — the toughest timing in the game.</li>
+  </ol>
+
+  <h2>Revive and Double Score</h2>
+  <p>When your tower finally topples, you have two optional boosts on the results screen:</p>
+  <ul>
+    <li><strong>❤️ Continue</strong> — clear the fallen chips and keep going from the surviving tower, with your score intact. Once per run.</li>
+    <li><strong>🎬 Double score</strong> — double your final score before it's submitted to the leaderboard.</li>
+  </ul>
+  <p>These are optional and never required to play. On the main site they may be backed by an ad; the game itself
+  is always free.</p>
+
+  <h2>Leaderboard, nicknames &amp; streaks</h2>
+  <ul>
+    <li><strong>Global leaderboard:</strong> daily, weekly, and all-time boards. Your best run appears on all three.</li>
+    <li><strong>Unique nicknames:</strong> the first player to register a name owns it worldwide. Pick yours and defend your rank.</li>
+    <li><strong>Daily streak:</strong> come back each day to grow your streak counter shown on the title screen.</li>
+  </ul>
+
+  <h2>Tips for a high score</h2>
+  <ul>
+    <li>Chase perfects early — a long combo on the low, stable part of the tower banks huge bonus points.</li>
+    <li>On a leaning tower, drop toward the side that pulls it back to center instead of always aiming dead-center.</li>
+    <li>Don't rush in the Sky zone — it's the calm stretch. Use it to rebuild a clean stack before the stratosphere.</li>
+    <li>Watch the tower's balance indicator. If the center of mass drifts to the edge, one more bad chip ends the run.</li>
+    <li>Save your Continue for a genuinely high tower, not an early stumble.</li>
+  </ul>
+
+  <a class="cta" href="/">▶ Play CHIP! CHIP! now</a>
+
+  <hr class="lang-sep">
+
+  <!-- ───────────────── 한국어 ───────────────── -->
+  <h1>CHIP! CHIP! 플레이 방법</h1>
+  <p class="meta">쌓기·퍼펙트·콤보·고도 구간, 그리고 글로벌 랭킹 등반까지 완전 가이드.</p>
+
+  <p>CHIP! CHIP! 칩칩!은 실제 물리 엔진으로 돌아가는 원터치 스태킹 게임입니다. 컬러 칩이 탑 위에서 좌우로 스윙하고,
+  화면을 한 번 터치하면 그대로 아래로 떨어집니다. 깔끔하게 착지하면 탑이 자라고, 어긋나게 놓으면 탑이 기울다가
+  결국 와르르 무너집니다. 조작은 단 하나 — <strong>터치해서 떨어뜨리기</strong>. 나머지는 전부 타이밍과 배짱, 그리고 물리입니다.</p>
+
+  <h2>단 하나의 규칙: 터치해서 떨어뜨리기</h2>
+  <ul>
+    <li>칩이 탑 꼭대기 위에서 움직입니다. 움직임을 지켜보세요.</li>
+    <li>화면 아무 곳이나 터치하면 즉시 낙하합니다. 조준 버튼도, 지연도 없습니다.</li>
+    <li>칩은 진짜 물리 오브젝트라, 중심에서 벗어나 착지하면 미끄러지고 탑을 흔듭니다.</li>
+    <li>최대한 높이 쌓으세요. 점수는 성공적으로 쌓은 칩 수 + 퍼펙트 보너스입니다.</li>
+  </ul>
+
+  <h2>퍼펙트 착지와 콤보</h2>
+  <p>떨어지는 칩을 아래 칩 바로 위에 맞추세요. 좌우 오차가 퍼펙트 범위 안이면 <strong>PERFECT!</strong> 스탬프가 뜨고
+  칩이 깔끔하게 고정되며 콤보가 올라갑니다. 연속 퍼펙트는 보너스가 배가되므로, 대충 쌓는 것보다 클린 스트릭이 훨씬 가치 있습니다.</p>
+  <ul>
+    <li><strong>기본 착지:</strong> 칩당 +10점</li>
+    <li><strong>퍼펙트 보너스:</strong> +30 × 현재 콤보 (콤보 배수는 5에서 상한)</li>
+    <li><strong>3연속 퍼펙트</strong>는 "SET!" 안정화 발동 — 활성 칩이 진정되어 높고 흔들리는 탑에 여유가 생깁니다.</li>
+    <li>한 번의 어긋난 착지로 콤보가 0으로 초기화되니 스트릭을 지키세요.</li>
+  </ul>
+
+  <h2>고도 구간 — 등반</h2>
+  <p>탑이 오를수록 카메라가 함께 올라가고 배경이 네 개의 고도 구간을 스크롤합니다. 도시마다 손으로 만든 픽셀아트
+  배경이 다르지만, 4단계 등반 구조는 전 도시 공통입니다:</p>
+  <table>
+    <tr><th>구간</th><th>높이(칩)</th><th>보이는 것</th></tr>
+    <tr><td>지상</td><td>0–15</td><td>거리, 랜드마크, 나무, 포장마차</td></tr>
+    <tr><td>스카이라인</td><td>16–40</td><td>빌딩, 다리, 노을 진 스카이라인</td></tr>
+    <tr><td>하늘</td><td>41–70</td><td>구름, 열기구, 연 — 잠깐의 휴식 구간</td></tr>
+    <tr><td>성층권</td><td>71+</td><td>별, 초승달, 위성 — 밤하늘</td></tr>
+  </table>
+
+  <h2>난이도 페이즈</h2>
+  <ol>
+    <li><strong>페이즈 1 — 좌우 스윙:</strong> 칩이 좌우로 움직입니다. 타이밍을 재세요.</li>
+    <li><strong>페이즈 2 — 상하 낙하:</strong> 위아래로도 움직입니다. 낮은 지점에서 놓아야 부드럽고 정확한 착지.</li>
+    <li><strong>페이즈 3 — 랜덤:</strong> 축이 짧게 예고된 뒤 움직입니다.</li>
+    <li><strong>페이즈 4 — 대각선:</strong> 칩이 대각선을 그립니다 — 게임에서 가장 어려운 타이밍.</li>
+  </ol>
+
+  <h2>이어하기와 점수 2배</h2>
+  <ul>
+    <li><strong>❤️ 이어하기</strong> — 무너진 칩만 치우고 살아남은 탑에서 점수를 유지한 채 계속. 런당 1회.</li>
+    <li><strong>🎬 점수 2배</strong> — 랭킹 제출 전에 최종 점수를 두 배로.</li>
+  </ul>
+  <p>둘 다 선택 사항이며 플레이에 필수가 아닙니다. 게임은 언제나 무료입니다.</p>
+
+  <h2>랭킹 · 닉네임 · 스트릭</h2>
+  <ul>
+    <li><strong>글로벌 랭킹:</strong> 오늘/주간/전체 보드. 최고 기록이 세 보드에 모두 반영됩니다.</li>
+    <li><strong>유니크 닉네임:</strong> 먼저 등록한 사람이 그 이름을 전 세계에서 소유합니다.</li>
+    <li><strong>데일리 스트릭:</strong> 매일 돌아오면 타이틀 화면의 연속 출석 수가 늘어납니다.</li>
+  </ul>
+
+  <h2>고득점 팁</h2>
+  <ul>
+    <li>초반에 퍼펙트를 노리세요 — 낮고 안정된 구간의 긴 콤보가 큰 보너스를 적립합니다.</li>
+    <li>기운 탑에서는 항상 정중앙이 아니라, 탑을 중심으로 되돌리는 쪽으로 떨어뜨리세요.</li>
+    <li>하늘 구간에서 서두르지 마세요 — 성층권 전에 스택을 정돈하는 휴식 구간입니다.</li>
+    <li>무게중심 인디케이터를 보세요. 중심이 가장자리로 쏠리면 다음 한 칩이 런을 끝낼 수 있습니다.</li>
+    <li>이어하기는 초반 실수가 아니라 정말 높은 탑을 위해 아껴두세요.</li>
+  </ul>
+
+  <a class="cta" href="/">▶ 지금 플레이하기</a>
+
+  <footer>© 2026 CHIP! CHIP! 칩칩! · <a href="/">playchipchip.com</a></footer>
+</div>
+</body>
+</html>

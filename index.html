@@ -290,12 +290,17 @@
   /* 랭킹 보드 열림 중엔 전역 버튼 숨김 (보드 자체 닫기 버튼과 겹침 방지) */
   body.board-open #btnLang, body.board-open #btnSound { display: none; }
 
-  #privacyLink {
-    display: inline-block; margin-top: 14px;
+  .title-foot {
+    margin-top: 16px; max-width: 88%;
+    font-family: 'IBM Plex Sans KR', sans-serif; font-size: 12px; line-height: 1.5; color: #6b5947;
+  }
+  .title-foot .blurb { margin-bottom: 8px; }
+  .title-links { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; }
+  .title-links a {
     font-family: 'Jua', sans-serif; font-size: 12px; letter-spacing: .3px;
     color: #8a7860; text-decoration: none; border-bottom: 1px solid rgba(138,120,96,.4);
   }
-  #privacyLink:hover { color: #55452F; }
+  .title-links a:hover { color: #55452F; }
 
   /* ── 광고 스텁 오버레이 (ads.js가 body에 생성) ── */
   #adOverlay {
@@ -334,7 +339,14 @@
       <div id="citySelect"></div>
       <button id="btnStart" class="btn-big" data-i18n="play">쌓아 볼까?</button>
       <button id="btnBoardTitle" class="btn-teal" data-i18n="ranking">🏆 랭킹</button>
-      <a id="privacyLink" href="privacy.html" data-i18n="privacy">개인정보처리방침</a>
+      <div class="title-foot">
+        <p class="blurb" data-i18n="home_blurb">한 번의 터치로 컬러 칩을 쌓는 실물리 스태킹 게임. 서울·문경·파리·도쿄 등 8개 도시의 스카이라인을 성층권까지 등반하세요. 무료 · 설치 불필요.</p>
+        <nav class="title-links">
+          <a href="how-to-play.html" data-i18n="how_to_play">게임 방법</a>
+          <a href="about.html" data-i18n="about">소개</a>
+          <a href="privacy.html" data-i18n="privacy">개인정보처리방침</a>
+        </nav>
+      </div>
     </div>
 
     <!-- 결과 (와르르...!) -->
