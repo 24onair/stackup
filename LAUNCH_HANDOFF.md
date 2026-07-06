@@ -91,7 +91,7 @@
   - [ ] SW 등록을 프로덕션 도메인으로 게이팅 (현재 모든 https에서 등록됨, index.html:398 — 포털 임베드 오염 방지)
   - [ ] BGM 압축 (audio/ 2.5MB — Poki 초기 8MB 제한 대비, 앰비언스는 이미 압축됨 08140ca)
 - [ ] **itch.io 게시** — 빌드 zip(문서·핸드오프·supabase 제외) + 리스팅 카피(EN) 준비 → 유저가 계정·업로드
-- [ ] **CrazyGames SDK v3 통합 + 제출** — ads.js 어댑터 분기(포털 감지 시 CrazyGames ad 모듈), gameplayStart/Stop·loading 이벤트
+- [x] **CrazyGames SDK v3 통합** ✅ (`c9bbaab`) — `js/crazygames.js` 어댑터 + `build-portal.sh`. 로컬 데모광고로 E2E 검증. → **제출은 유저 액션**: `./build-portal.sh` → `chipchip-crazygames.zip` → developer.crazygames.com (가이드: `portal/crazygames-submit.md`)
 - [ ] GameDistribution/GameMonetize 제출, Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
 
 **트랙 마케팅 (유저 액션):**
