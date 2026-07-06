@@ -3,3 +3,6 @@
 
 # 디자인 소스 아카이브 (저장소에 불필요)
 *.zip
+
+# 포털 빌드 산출물 (build-portal.sh로 생성)
+dist-crazygames/
