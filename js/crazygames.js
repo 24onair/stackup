@@ -10,7 +10,7 @@
 // 광고 정책: adStarted에 게임 사운드 뮤트, adFinished/adError에 언뮤트(문서 요구).
 
 let _active = false;
-let _mute = null, _unmute = null;
+let _mute = null, _unmute = null, _onPlatformMute = null;
 
 const sdk = () => (window.CrazyGames && window.CrazyGames.SDK) || null;
 const safe = (fn) => { try { return fn(); } catch { /* disabled 환경 등 무시 */ } };
@@ -26,13 +26,31 @@ export const CG = {
       await s.init();
       const env = s.environment; // 'crazygames' | 'local' | 'disabled'
       _active = env === 'crazygames' || env === 'local';
-      if (_active) safe(() => s.game.loadingStart());
+      if (_active) {
+        safe(() => s.game.loadingStart());
+        // 플랫폼 muteAudio 연동 — 설정 변경 리스너 등록 + 초기 상태 반영.
+        // (settings.muteAudio가 true면 게임 오디오를 꺼야 하며 인게임 설정보다 우선)
+        safe(() => {
+          const apply = (settings) => {
+            const st = settings || sdk().game.settings || {};
+            if (_onPlatformMute) _onPlatformMute(!!st.muteAudio);
+          };
+          sdk().game.addSettingsChangeListener(apply);
+          apply(); // 초기 muteAudio 상태 즉시 반영
+        });
+      }
       return _active;
     } catch { _active = false; return false; }
   },
 
   /** main.js가 오디오 뮤트/언뮤트 훅 주입 (광고 재생 중 게임 사운드 정지) */
   setAudioHooks(mute, unmute) { _mute = mute; _unmute = unmute; },
+
+  /** main.js가 플랫폼 muteAudio 변경 훅 주입 — fn(muted:boolean). 등록 즉시 현재 상태로 1회 호출 */
+  setMuteHook(fn) {
+    _onPlatformMute = fn;
+    if (_active && fn) safe(() => fn(!!(sdk().game.settings || {}).muteAudio));
+  },
 
   loadingDone()   { if (_active) safe(() => sdk().game.loadingStop()); },
   gameplayStart() { if (_active) safe(() => sdk().game.gameplayStart()); },
