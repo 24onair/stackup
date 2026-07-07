@@ -79,6 +79,8 @@
     background: #F3E9D7;
     overflow: hidden;
   }
+  /* 타이틀은 세로가 좁으면(포털 임베드) 잘리지 않게 스크롤 — safe center로 상단 클리핑 방지 */
+  #title { overflow-y: auto; justify-content: safe center; }
 
   /* 5색 상단 띠 (커버 모티프) */
   .strip5 { position: absolute; top: 0; left: 0; right: 0; height: 12px; display: flex; }
@@ -132,6 +134,7 @@
   #citySelect {
     display: flex; gap: 10px; overflow-x: auto; max-width: 94%;
     padding: 4px 4px 10px; -webkit-overflow-scrolling: touch;
+    flex-shrink: 0; /* 세로가 좁은 포털 임베드(GameMonetize 등)에서 플렉스 압축으로 카드가 뭉개지는 것 방지 */
   }
   .city-card {
     flex: 0 0 auto; padding: 0; border: 3px solid #33261A; border-radius: 0;
