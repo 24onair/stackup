@@ -94,8 +94,26 @@
 - [x] **CrazyGames SDK v3 통합 + 제출 완료** ✅ (2026-07-06 제출) — `js/crazygames.js` 어댑터 + `build-portal.sh` + muteAudio 코디네이터(`be759da`). QA Tool 필수 체크(Gameplay/Loading Start·Stop) 전부 초록. 광고는 Preview/basic-tournament 모드에서 비활성이라 심사팀이 실인벤토리로 검증. **상태: In review** → developer.crazygames.com → My Games에서 추적. 수정요청 시 `./build-portal.sh` 재빌드 → Submit a game update. (가이드: `portal/crazygames-submit.md`)
   - 알려진 경미 버그: 6칩 등 동결 base 없는 작은 탑 붕괴 시 이어하기 버튼 무반응 경계 케이스(제출 무관, 후속 수정 예정)
 - [x] **GameDistribution SDK 통합 + 제출 완료** ✅ (2026-07-07 제출) — GD HTML5 SDK 어댑터(`js/gamedistribution.js`) + `build-portal.sh gamedistribution` (`756b8c3`). 게임 등록(gameId `08e7b4c3c8a94cf1bda9edd814453268`, 계정 Bplaystudio/24onair), zip 업로드 → **SDK 검증 통과(SDK: Yes, Rewarded Ads 자동 체크)** → 에셋 5종(gd-assets/) 업로드 → 활성화 요청. **상태: In Review**. developer.gamedistribution.com → Games에서 추적. 에셋: 필수 512×384·512×512·200×120 + 마케팅 1280×720·1280×550. (가이드: `portal/gamedistribution-submit.md`)
-- [~] **GameMonetize — 코드 통합 완료, gameId 대기** — GM HTML5 SDK 어댑터(`js/gamemonetize.js`, GD 동형: `SDK_OPTIONS`/`window.sdk`/`showBanner()`) + `build-portal.sh gamemonetize` 완료. 플레이스홀더 빌드로 부팅·어댑터 활성·SDK 로드·무크래시 검증됨(로컬). **다음: gamemonetize.com에서 게임 등록 → gameId 발급 → `GM_GAME_ID=<GUID> ./build-portal.sh gamemonetize` → zip 업로드(에셋 gd-assets 재사용) → 제출.** 리워드 플래그 ON 필수. (가이드: `portal/gamemonetize-submit.md`)
+- [x] **GameMonetize SDK 통합 + 제출** ✅ (2026-07-07) — GM HTML5 SDK 어댑터(`js/gamemonetize.js`, GD 동형이나 광고 메서드는 `showBanner()` 하나뿐, 완주 신호는 IMA `COMPLETE`) + `build-portal.sh gamemonetize`. gameId `vziesnhrwcat4p2obpwl2pcgxwh0jeps`(계정 24onair). 실광고 로컬 서빙으로 이어하기·점수2배 검증. 에셋: 필수 3종 재활용 + **512×340 신규(`gd-assets/thumb-512x340.jpg`)**. **다음(유저): 최신 zip 업로드 → Category 2개(Min 2) → Save → Verify Game(광고 완주) → Request activation.** 리워드는 별도 플래그 없이 Verify로 자동 인식. (가이드: `portal/gamemonetize-submit.md`)
 - [ ] Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
+
+**트랙 B 핫픽스 (2026-07-07 세션 — 포털 테스트 중 발견·수정):**
+- [x] **GameMonetize 리워드 완주 신호 = `COMPLETE`** (`0128cc1`) — GM은 GD의 `SDK_REWARDED_WATCH_COMPLETE`를 안 냄. IMA/VAST 이벤트(`STARTED→…→COMPLETE`)를 내므로 `COMPLETE`에만 보상. 안 고쳤을 때 증상: "광고 봐도 이어하기 복귀 안 됨".
+- [x] **도시 선택기 세로 압축 버그** (`d758352`, index.html) — 세로 좁은 포털 iframe에서 `.overlay` 플렉스가 `#citySelect`를 납작하게 눌러 카드가 스크롤바만 남음. `#citySelect{flex-shrink:0}` + `#title{overflow-y:auto;justify-content:safe center}`. **메인+전 포털 공통 영향.**
+- [x] **GM 광고 무필/로딩지연 대응 워치독** (`b08a9ea`) — GM 광고는 로드~시작 ~10s, 무필 시 이벤트 0개(완전 침묵). 시작 워치독 15s로 무필 시 버튼 즉시 복원(기존 120s 방치). *ERROR* 즉시 dismiss. "더블스코어 광고 안 나옴"의 정체 = 무필(버그 아님).
+- [x] **광고 로딩 인디케이터** (`09bed35`, index.html·ads.js·i18n·main.js) — 포털 광고 요청 시 "광고 불러오는 중…"/"Loading ad…" 오버레이+슬라이드 바. 광고 시작(오디오 뮤트 훅) 또는 종료 시 숨김. ~10s 로딩을 "먹통"으로 오해하는 문제 해소. **메인+전 포털 공통.**
+
+**📌 포털 빌드 최신화 상태 + 승인 후 업데이트 (중요):**
+> 위 4개 핫픽스 중 **도시선택기·로딩 인디케이터는 전 포털 공통**. 각 포털의 제출 빌드가 이 수정을 포함하는지 아래로 관리. **각 플랫폼 승인되면 최신 빌드로 업데이트할 것(유저가 승인 알리면 재빌드·재제출 지원).**
+
+| 포털 | 상태 | 제출 빌드에 핫픽스 포함? | 승인 후/지금 할 일 |
+|---|---|---|---|
+| **itch.io** | 공개 라이브 | ❌ 구빌드(핫픽스 전) | **지금 가능**(공개라 즉시 재업로드) — `chipchip-itch.zip` 재빌드 후 itch Edit에서 파일 교체 |
+| **CrazyGames** | In review | ✅ 도시선택기+로딩(2026-07-07 업데이트 제출) | 승인 후 추가 수정 생기면 `./build-portal.sh` → Submit a game update |
+| **GameDistribution** | In review | ❌ 구빌드(`756b8c3`, 핫픽스 전) | **승인 후** `GD_GAME_ID=08e7b4c3… ./build-portal.sh gamedistribution` → 새 zip 업로드(리뷰 중 교체보다 승인 후가 깔끔) |
+| **GameMonetize** | 제출/In review | ✅ 4개 핫픽스 전부 | 승인 후 추가 수정 시 `GM_GAME_ID=vzies… ./build-portal.sh gamemonetize` 재업로드 |
+
+> **itch는 지금 바로**, GD는 승인 후 재빌드 권장. 새 포털(Poki 등)은 처음부터 최신 소스라 자동 포함.
 
 **트랙 마케팅 (유저 액션):**
 - [ ] 쇼트폼 채널 개설 + 주 2~3회 업로드 시작, Reddit(r/WebGames 등)/Show HN 포스팅
