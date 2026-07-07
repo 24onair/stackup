@@ -6,6 +6,7 @@
 #   ./build-portal.sh crazygames           → CrazyGames 빌드
 #   GD_GAME_ID=xxxx ./build-portal.sh gamedistribution  → GameDistribution 빌드
 #   GM_GAME_ID=xxxx ./build-portal.sh gamemonetize       → GameMonetize 빌드
+#   ./build-portal.sh itch                 → 순수 빌드(SDK 주입 없음, itch.io·자체호스팅용)
 #
 # 산출물: dist-<portal>/ 폴더 + chipchip-<portal>.zip (루트에 index.html)
 # 어댑터(js/crazygames.js · js/gamedistribution.js)가 주입된 SDK를 감지해 광고를 해당 포털로 라우팅.
@@ -67,8 +68,14 @@ case "$PORTAL" in
       echo "    제출용은: GM_GAME_ID=<대시보드에서 발급받은 GUID> ./build-portal.sh gamemonetize"
     fi
     ;;
+  itch|plain|none)
+    OUT="dist-itch"; ZIP="chipchip-itch.zip"
+    INJECT=""; GUARD=""; SKIP_INJECT=1
+    # 순수 빌드 — 포털 SDK 주입 없음. itch.io(자체 호스팅, iframe 임베드) 등에 사용.
+    # 광고 어댑터는 전부 비활성 → ads.js 폴백(가짜 광고)이 리워드 보장.
+    ;;
   *)
-    echo "알 수 없는 포털: $PORTAL  (crazygames | gamedistribution | gamemonetize)"; exit 1 ;;
+    echo "알 수 없는 포털: $PORTAL  (crazygames | gamedistribution | gamemonetize | itch)"; exit 1 ;;
 esac
 
 rm -rf "$OUT" "$ZIP"
@@ -77,7 +84,8 @@ mkdir -p "$OUT"
 # 런타임에 필요한 것만 복사 (문서·인프라·SW·SEO 파일 제외)
 cp -R index.html privacy.html about.html how-to-play.html manifest.json js assets audio "$OUT/"
 
-# index.html에 포털 SDK 주입 (matter-js 로드 직전 — main.js 모듈보다 먼저)
+# index.html에 포털 SDK 주입 (matter-js 로드 직전 — main.js 모듈보다 먼저). 순수 빌드(itch)는 건너뜀.
+if [ -z "${SKIP_INJECT:-}" ]; then
 python3 - "$OUT/index.html" "$INJECT" "$GUARD" <<'PY'
 import sys
 path, inject, guard = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -89,6 +97,7 @@ html = html.replace(marker, inject + '\n' + marker, 1)
 open(path, 'w', encoding='utf-8').write(html)
 print('injected', guard, 'into', path)
 PY
+fi
 
 # 제출용 zip (dist 내부 기준 — 루트에 index.html이 오도록)
 ( cd "$OUT" && zip -r -q "../$ZIP" . -x "*.DS_Store" )
@@ -96,4 +105,8 @@ PY
 echo "빌드 완료 ($PORTAL):"
 echo "  폴더: $OUT/"
 echo "  zip : $ZIP ($(du -h "$ZIP" | cut -f1))"
-echo "  SDK 주입 확인: $(grep -c "$GUARD" "$OUT/index.html") 개"
+if [ -z "${SKIP_INJECT:-}" ]; then
+  echo "  SDK 주입 확인: $(grep -c "$GUARD" "$OUT/index.html") 개"
+else
+  echo "  SDK 주입: 없음(순수 빌드 — itch/자체호스팅용)"
+fi
