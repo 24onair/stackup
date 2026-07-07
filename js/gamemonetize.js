@@ -45,19 +45,23 @@ export const GM = {
         case 'SDK_GAME_PAUSE': // 광고 시작 → 게임 오디오 뮤트
           safe(() => _mute && _mute());
           break;
-        case 'SDK_GAME_START': // 광고 종료(또는 초기 준비) → 언뮤트 + 대기 흐름 복귀
-          safe(() => _unmute && _unmute());
-          if (_pendingInterstitial) { const done = _pendingInterstitial; _pendingInterstitial = null; safe(done); }
-          // 리워드 완주 이벤트 없이 재개됐으면(스킵/무필) 보상 없이 종료
-          if (_pendingReward && !_pendingReward.settled) safe(() => _pendingReward.end());
-          break;
-        case 'SDK_REWARDED_WATCH_COMPLETE': // 완주 → 보상 (권위 신호)
+        // ⚠️ GameMonetize는 GD의 SDK_REWARDED_WATCH_COMPLETE를 쓰지 않고 IMA/VAST 이벤트를
+        //    낸다. 광고 완주 신호는 'COMPLETE'(모든 quartile 통과 후). 이게 리워드의 권위 신호.
+        //    (SDK_REWARDED_WATCH_COMPLETE도 혹시 모를 변형 대비해 함께 처리)
+        case 'COMPLETE':
+        case 'SDK_REWARDED_WATCH_COMPLETE':
           if (_pendingReward && !_pendingReward.settled) {
             _pendingReward.settled = true;
             const p = _pendingReward; _pendingReward = null;
             safe(() => p.onReward());
             preloadReward();
           }
+          break;
+        case 'SDK_GAME_START': // 광고 종료(또는 초기 준비) → 언뮤트 + 대기 흐름 복귀
+          safe(() => _unmute && _unmute());
+          if (_pendingInterstitial) { const done = _pendingInterstitial; _pendingInterstitial = null; safe(done); }
+          // COMPLETE 없이 재개됐으면(스킵/무필/중도이탈) 보상 없이 종료
+          if (_pendingReward && !_pendingReward.settled) safe(() => _pendingReward.end());
           break;
       }
     };
