@@ -979,7 +979,7 @@ CG.init().then((active) => {
   if (!active) return;
   // 광고 재생 중 오디오 정지/재개 (코디네이터 경유 — 백그라운드·플랫폼 뮤트와 충돌 방지)
   CG.setAudioHooks(
-    () => { _adMuted = true; applyAudioGate(); },
+    () => { _adMuted = true; applyAudioGate(); Ads.hideAdLoading(); }, // 광고 시작 → 로딩 인디케이터 숨김
     () => { _adMuted = false; applyAudioGate(); },
   );
   // 플랫폼 muteAudio 버튼 연동 (인게임 설정보다 우선 — 문서 요구)
@@ -990,7 +990,7 @@ CG.init().then((active) => {
 GD.init().then((active) => {
   if (!active) return;
   GD.setAudioHooks(
-    () => { _adMuted = true; applyAudioGate(); },
+    () => { _adMuted = true; applyAudioGate(); Ads.hideAdLoading(); }, // 광고 시작 → 로딩 인디케이터 숨김
     () => { _adMuted = false; applyAudioGate(); },
   );
 });
@@ -998,7 +998,7 @@ GD.init().then((active) => {
 GM.init().then((active) => {
   if (!active) return;
   GM.setAudioHooks(
-    () => { _adMuted = true; applyAudioGate(); },
+    () => { _adMuted = true; applyAudioGate(); Ads.hideAdLoading(); }, // 광고 시작 → 로딩 인디케이터 숨김
     () => { _adMuted = false; applyAudioGate(); },
   );
 });

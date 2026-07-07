@@ -319,6 +319,9 @@
   #adOverlay .ad-text { font-family: 'Jua', sans-serif; font-size: 17px; margin-bottom: 18px; letter-spacing: 1px; }
   #adOverlay .ad-bar { height: 8px; background: rgba(251,244,230,.2); border: 1px solid #FBF4E6; overflow: hidden; }
   #adOverlay .ad-bar-fill { height: 100%; width: 0; background: #EDAA3C; }
+  /* 광고 로딩(포털 광고는 로드에 수 초 걸림) — 진행률 대신 무한 슬라이드 바 */
+  #adOverlay.loading .ad-bar-fill { width: 40%; animation: adLoadSlide 1.1s ease-in-out infinite; }
+  @keyframes adLoadSlide { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
 </style>
 </head>
 <body>

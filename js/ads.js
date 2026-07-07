@@ -18,6 +18,7 @@
 //  - `?adtest`  테스트 광고 모드(data-adbreak-test) — 승인 전 노출 확인용
 
 import { track } from './analytics.js';
+import { t } from './i18n.js';
 import { CG } from './crazygames.js';
 import { GD } from './gamedistribution.js';
 import { GM } from './gamemonetize.js';
@@ -94,16 +95,39 @@ function ensureOverlay() {
 
 function playFakeAd(text, durationMs, onDone) {
   const el = ensureOverlay();
+  el.classList.remove('loading'); // 진행률 바 모드
   el.querySelector('.ad-text').textContent = text;
   const fill = el.querySelector('.ad-bar-fill');
+  fill.style.width = '0';
   el.style.display = 'flex';
   const start = performance.now();
   (function tick(now) {
-    const t = Math.min(1, (now - start) / durationMs);
-    fill.style.width = (t * 100).toFixed(1) + '%';
-    if (t < 1) requestAnimationFrame(tick);
+    const p = Math.min(1, (now - start) / durationMs);
+    fill.style.width = (p * 100).toFixed(1) + '%';
+    if (p < 1) requestAnimationFrame(tick);
     else { el.style.display = 'none'; onDone(); }
   })(start);
+}
+
+// ─── 광고 로딩 인디케이터 ────────────────────────────────────
+// 포털 광고(CrazyGames·GD·GameMonetize)는 로드~시작까지 수 초(GM은 ~10s) 걸린다.
+// 그 동안 "광고 불러오는 중…"을 띄워 먹통처럼 보이는 것을 방지. 광고가 실제로 시작되면
+// (main.js의 오디오 뮤트 훅 → Ads.hideAdLoading) 또는 흐름 종료 시 숨긴다.
+let loadingShown = false;
+function showAdLoading() {
+  const el = ensureOverlay();
+  el.classList.add('loading');           // 무한 슬라이드 바
+  el.querySelector('.ad-text').textContent = t('ad_loading');
+  el.querySelector('.ad-bar-fill').style.width = '';
+  el.style.display = 'flex';
+  loadingShown = true;
+}
+function hideAdLoading() {
+  if (!loadingShown) return;
+  loadingShown = false;
+  if (!overlay) return;
+  overlay.classList.remove('loading');
+  overlay.style.display = 'none';
 }
 
 // ─── 실제 배치 API 호출 래퍼 ────────────────────────────────
@@ -167,15 +191,20 @@ export const Ads = {
       && performance.now() - state.lastRewardedAt >= AFTER_REWARDED_GAP_MS; // 리워드 직후 제외
   },
 
+  /** 광고 시작(오디오 뮤트) 시 main.js가 호출 — 로딩 인디케이터 숨김(실제 광고가 뜸) */
+  hideAdLoading,
+
   showInterstitial(onClosed) {
     if (state.disabled) { onClosed(); return; }
     state.lastInterstitialAt = performance.now();
     state.gameOversSinceAd = 0;
     state.scheduleIdx++; // 다음 간격으로 진행: 3 → 2 → 1(매판 유지)
     track('ad_impression', { format: 'interstitial', real: CG.active || GD.active || GM.active || realAdsReady(), portal: CG.active || GD.active || GM.active });
-    if (CG.active) { CG.showInterstitial(onClosed); return; }        // CrazyGames 빌드
-    if (GD.active) { GD.showInterstitial(onClosed); return; }        // GameDistribution 빌드
-    if (GM.active) { GM.showInterstitial(onClosed); return; }        // GameMonetize 빌드
+    const closed = () => { hideAdLoading(); onClosed(); };
+    // 포털 광고는 로드가 느려 로딩 인디케이터 표시(시작 시 뮤트 훅이 숨김)
+    if (CG.active) { showAdLoading(); CG.showInterstitial(closed); return; } // CrazyGames 빌드
+    if (GD.active) { showAdLoading(); GD.showInterstitial(closed); return; } // GameDistribution 빌드
+    if (GM.active) { showAdLoading(); GM.showInterstitial(closed); return; } // GameMonetize 빌드
     if (realAdsReady()) realInterstitial(onClosed);                  // 자체 도메인 AdSense
     else playFakeAd('INTERSTITIAL AD PLAYING…', INTERSTITIAL_MS, onClosed); // 로컬·itch 폴백
   },
@@ -184,11 +213,13 @@ export const Ads = {
     if (state.disabled) { onReward(); return; }
     state.lastRewardedAt = performance.now();
     track('ad_impression', { format: 'rewarded', placement, real: CG.active || GD.active || GM.active || realAdsReady(), portal: CG.active || GD.active || GM.active });
-    const grant = () => { track('ad_reward_complete', { placement }); onReward(); };
-    if (CG.active) { CG.showRewarded(grant, onDismiss); return; }     // CrazyGames: 완주 시에만 보상
-    if (GD.active) { GD.showRewarded(grant, onDismiss); return; }     // GameDistribution: 완주 시에만 보상
-    if (GM.active) { GM.showRewarded(grant, onDismiss); return; }     // GameMonetize: 완주 시에만 보상
-    if (realAdsReady()) realRewarded(grant, onDismiss);              // 자체 도메인 AdSense
+    const grant = () => { hideAdLoading(); track('ad_reward_complete', { placement }); onReward(); };
+    const dismiss = () => { hideAdLoading(); if (onDismiss) onDismiss(); };
+    // 포털 광고는 로드가 느려 로딩 인디케이터 표시(시작 시 뮤트 훅이 숨김)
+    if (CG.active) { showAdLoading(); CG.showRewarded(grant, dismiss); return; }  // CrazyGames: 완주 시에만 보상
+    if (GD.active) { showAdLoading(); GD.showRewarded(grant, dismiss); return; }  // GameDistribution: 완주 시에만 보상
+    if (GM.active) { showAdLoading(); GM.showRewarded(grant, dismiss); return; }  // GameMonetize: 완주 시에만 보상
+    if (realAdsReady()) realRewarded(grant, dismiss);               // 자체 도메인 AdSense
     else playFakeAd('REWARDED AD PLAYING…', REWARDED_MS, grant);      // 폴백은 항상 시청 성공 처리
   },
 };
