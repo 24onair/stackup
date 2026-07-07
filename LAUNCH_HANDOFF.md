@@ -91,8 +91,10 @@
   - [ ] SW 등록을 프로덕션 도메인으로 게이팅 (현재 모든 https에서 등록됨, index.html:398 — 포털 임베드 오염 방지)
   - [ ] BGM 압축 (audio/ 2.5MB — Poki 초기 8MB 제한 대비, 앰비언스는 이미 압축됨 08140ca)
 - [ ] **itch.io 게시** — 빌드 zip(문서·핸드오프·supabase 제외) + 리스팅 카피(EN) 준비 → 유저가 계정·업로드
-- [x] **CrazyGames SDK v3 통합** ✅ (`c9bbaab`) — `js/crazygames.js` 어댑터 + `build-portal.sh`. 로컬 데모광고로 E2E 검증. → **제출은 유저 액션**: `./build-portal.sh` → `chipchip-crazygames.zip` → developer.crazygames.com (가이드: `portal/crazygames-submit.md`)
-- [ ] GameDistribution/GameMonetize 제출, Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
+- [x] **CrazyGames SDK v3 통합 + 제출 완료** ✅ (2026-07-06 제출) — `js/crazygames.js` 어댑터 + `build-portal.sh` + muteAudio 코디네이터(`be759da`). QA Tool 필수 체크(Gameplay/Loading Start·Stop) 전부 초록. 광고는 Preview/basic-tournament 모드에서 비활성이라 심사팀이 실인벤토리로 검증. **상태: In review** → developer.crazygames.com → My Games에서 추적. 수정요청 시 `./build-portal.sh` 재빌드 → Submit a game update. (가이드: `portal/crazygames-submit.md`)
+  - 알려진 경미 버그: 6칩 등 동결 base 없는 작은 탑 붕괴 시 이어하기 버튼 무반응 경계 케이스(제출 무관, 후속 수정 예정)
+- [ ] **GameDistribution 제출** (진행 중) — GD HTML5 SDK 어댑터(`js/gamedistribution.js`) + `build-portal.sh gamedistribution` 완료·검증됨. 게임 등록 완료(gameId `08e7b4c3c8a94cf1bda9edd814453268`, 계정 Bplaystudio/24onair). 빌드 `chipchip-gamedistribution.zip` 생성됨 → **다음: 대시보드 UPLOAD 탭에 zip 업로드 → Rewarded 버튼 테스트(자동 체크) → 제출**. Rewarded Ads 체크박스는 SDK 테스트 후 자동. (가이드: `portal/gamedistribution-submit.md`)
+- [ ] GameMonetize 제출, Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
 
 **트랙 마케팅 (유저 액션):**
 - [ ] 쇼트폼 채널 개설 + 주 2~3회 업로드 시작, Reddit(r/WebGames 등)/Show HN 포스팅

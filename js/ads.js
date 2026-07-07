@@ -19,6 +19,7 @@
 
 import { track } from './analytics.js';
 import { CG } from './crazygames.js';
+import { GD } from './gamedistribution.js';
 
 const AD_CLIENT = 'ca-pub-1737192970081110';
 const PROD_HOSTS = ['playchipchip.com', 'www.playchipchip.com'];
@@ -170,8 +171,9 @@ export const Ads = {
     state.lastInterstitialAt = performance.now();
     state.gameOversSinceAd = 0;
     state.scheduleIdx++; // 다음 간격으로 진행: 3 → 2 → 1(매판 유지)
-    track('ad_impression', { format: 'interstitial', real: CG.active || realAdsReady(), portal: CG.active });
+    track('ad_impression', { format: 'interstitial', real: CG.active || GD.active || realAdsReady(), portal: CG.active || GD.active });
     if (CG.active) { CG.showInterstitial(onClosed); return; }        // CrazyGames 빌드
+    if (GD.active) { GD.showInterstitial(onClosed); return; }        // GameDistribution 빌드
     if (realAdsReady()) realInterstitial(onClosed);                  // 자체 도메인 AdSense
     else playFakeAd('INTERSTITIAL AD PLAYING…', INTERSTITIAL_MS, onClosed); // 로컬·itch 폴백
   },
@@ -179,9 +181,10 @@ export const Ads = {
   showRewarded(onReward, onDismiss, placement = 'reward') {
     if (state.disabled) { onReward(); return; }
     state.lastRewardedAt = performance.now();
-    track('ad_impression', { format: 'rewarded', placement, real: CG.active || realAdsReady(), portal: CG.active });
+    track('ad_impression', { format: 'rewarded', placement, real: CG.active || GD.active || realAdsReady(), portal: CG.active || GD.active });
     const grant = () => { track('ad_reward_complete', { placement }); onReward(); };
     if (CG.active) { CG.showRewarded(grant, onDismiss); return; }     // CrazyGames: 완주 시에만 보상
+    if (GD.active) { GD.showRewarded(grant, onDismiss); return; }     // GameDistribution: 완주 시에만 보상
     if (realAdsReady()) realRewarded(grant, onDismiss);              // 자체 도메인 AdSense
     else playFakeAd('REWARDED AD PLAYING…', REWARDED_MS, grant);      // 폴백은 항상 시청 성공 처리
   },

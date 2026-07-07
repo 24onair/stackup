@@ -5,6 +5,7 @@ import { chipColor, randomStartIndex, oklchToHex } from './colors.js';
 import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe, setDoubleBtn, setReviveBtn, updateResultScore } from './ui.js';
 import { Ads } from './ads.js';
 import { CG } from './crazygames.js';
+import { GD } from './gamedistribution.js';
 import { Bgm } from './bgm.js';
 import { Sample } from './sfx.js';
 import { Leaderboard } from './leaderboard.js';
@@ -983,6 +984,14 @@ CG.init().then((active) => {
   // 플랫폼 muteAudio 버튼 연동 (인게임 설정보다 우선 — 문서 요구)
   CG.setMuteHook((muted) => { _platformMuted = muted; applyAudioGate(); });
   CG.loadingDone(); // 게임 인터랙티브 — CrazyGames 로딩 화면 종료
+});
+// GameDistribution SDK — GD 빌드(GD_OPTIONS 주입)에서만 활성. 광고 시작/종료(SDK_GAME_PAUSE/START)에 오디오 게이팅.
+GD.init().then((active) => {
+  if (!active) return;
+  GD.setAudioHooks(
+    () => { _adMuted = true; applyAudioGate(); },
+    () => { _adMuted = false; applyAudioGate(); },
+  );
 });
 // 캔버스 폰트는 명시 로드 필수(ctx.font는 로드를 트리거하지 않음) — 병렬 로드.
 // 주의: 루프 시작을 폰트에 블로킹하면 느린 네트워크에서 게임이 수 초간 멈춰
