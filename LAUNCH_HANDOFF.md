@@ -90,11 +90,12 @@
 - [ ] **포털 공통 사전작업** ← 다음 작업
   - [ ] SW 등록을 프로덕션 도메인으로 게이팅 (현재 모든 https에서 등록됨, index.html:398 — 포털 임베드 오염 방지)
   - [ ] BGM 압축 (audio/ 2.5MB — Poki 초기 8MB 제한 대비, 앰비언스는 이미 압축됨 08140ca)
-- [ ] **itch.io 게시** — 빌드 zip(문서·핸드오프·supabase 제외) + 리스팅 카피(EN) 준비 → 유저가 계정·업로드
+- [x] **itch.io 게시 완료** ✅ (2026-07-07 공개) — `chipchip-itch.zip` + 스크린샷 4장 업로드, HTML(브라우저 플레이) 프로젝트로 **PUBLISHED**. 계정 bplaystudio. 뷰포트 450×800·Mobile friendly·Portrait. 태그 10종(arcade/physics/one-button/stacking/hypercasual/highscore/pixel-art/casual/mobile/short). 상태: **공개 라이브**. 후속: 런칭 데브로그 1건(초안 작성됨) + r/WebGames 홍보. (가이드: `portal/itch-listing.md`)
 - [x] **CrazyGames SDK v3 통합 + 제출 완료** ✅ (2026-07-06 제출) — `js/crazygames.js` 어댑터 + `build-portal.sh` + muteAudio 코디네이터(`be759da`). QA Tool 필수 체크(Gameplay/Loading Start·Stop) 전부 초록. 광고는 Preview/basic-tournament 모드에서 비활성이라 심사팀이 실인벤토리로 검증. **상태: In review** → developer.crazygames.com → My Games에서 추적. 수정요청 시 `./build-portal.sh` 재빌드 → Submit a game update. (가이드: `portal/crazygames-submit.md`)
   - 알려진 경미 버그: 6칩 등 동결 base 없는 작은 탑 붕괴 시 이어하기 버튼 무반응 경계 케이스(제출 무관, 후속 수정 예정)
 - [x] **GameDistribution SDK 통합 + 제출 완료** ✅ (2026-07-07 제출) — GD HTML5 SDK 어댑터(`js/gamedistribution.js`) + `build-portal.sh gamedistribution` (`756b8c3`). 게임 등록(gameId `08e7b4c3c8a94cf1bda9edd814453268`, 계정 Bplaystudio/24onair), zip 업로드 → **SDK 검증 통과(SDK: Yes, Rewarded Ads 자동 체크)** → 에셋 5종(gd-assets/) 업로드 → 활성화 요청. **상태: In Review**. developer.gamedistribution.com → Games에서 추적. 에셋: 필수 512×384·512×512·200×120 + 마케팅 1280×720·1280×550. (가이드: `portal/gamedistribution-submit.md`)
-- [ ] GameMonetize 제출, Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
+- [~] **GameMonetize — 코드 통합 완료, gameId 대기** — GM HTML5 SDK 어댑터(`js/gamemonetize.js`, GD 동형: `SDK_OPTIONS`/`window.sdk`/`showBanner()`) + `build-portal.sh gamemonetize` 완료. 플레이스홀더 빌드로 부팅·어댑터 활성·SDK 로드·무크래시 검증됨(로컬). **다음: gamemonetize.com에서 게임 등록 → gameId 발급 → `GM_GAME_ID=<GUID> ./build-portal.sh gamemonetize` → zip 업로드(에셋 gd-assets 재사용) → 제출.** 리워드 플래그 ON 필수. (가이드: `portal/gamemonetize-submit.md`)
+- [ ] Poki 플레이테스트 업로드 (Poki는 8MB 대비 오디오 지연 로드 검토)
 
 **트랙 마케팅 (유저 액션):**
 - [ ] 쇼트폼 채널 개설 + 주 2~3회 업로드 시작, Reddit(r/WebGames 등)/Show HN 포스팅

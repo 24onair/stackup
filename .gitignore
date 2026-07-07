@@ -7,3 +7,4 @@
 # 포털 빌드 산출물 (build-portal.sh로 생성)
 dist-crazygames/
 dist-gamedistribution/
+dist-gamemonetize/

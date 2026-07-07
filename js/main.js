@@ -6,6 +6,7 @@ import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, dr
 import { Ads } from './ads.js';
 import { CG } from './crazygames.js';
 import { GD } from './gamedistribution.js';
+import { GM } from './gamemonetize.js';
 import { Bgm } from './bgm.js';
 import { Sample } from './sfx.js';
 import { Leaderboard } from './leaderboard.js';
@@ -989,6 +990,14 @@ CG.init().then((active) => {
 GD.init().then((active) => {
   if (!active) return;
   GD.setAudioHooks(
+    () => { _adMuted = true; applyAudioGate(); },
+    () => { _adMuted = false; applyAudioGate(); },
+  );
+});
+// GameMonetize SDK — GM 빌드(SDK_OPTIONS 주입)에서만 활성. 광고 시작/종료(SDK_GAME_PAUSE/START)에 오디오 게이팅.
+GM.init().then((active) => {
+  if (!active) return;
+  GM.setAudioHooks(
     () => { _adMuted = true; applyAudioGate(); },
     () => { _adMuted = false; applyAudioGate(); },
   );

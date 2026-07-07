@@ -5,6 +5,7 @@
 #   ./build-portal.sh                      → CrazyGames 빌드 (기본)
 #   ./build-portal.sh crazygames           → CrazyGames 빌드
 #   GD_GAME_ID=xxxx ./build-portal.sh gamedistribution  → GameDistribution 빌드
+#   GM_GAME_ID=xxxx ./build-portal.sh gamemonetize       → GameMonetize 빌드
 #
 # 산출물: dist-<portal>/ 폴더 + chipchip-<portal>.zip (루트에 index.html)
 # 어댑터(js/crazygames.js · js/gamedistribution.js)가 주입된 SDK를 감지해 광고를 해당 포털로 라우팅.
@@ -43,8 +44,31 @@ case "$PORTAL" in
       echo "    제출용은: GD_GAME_ID=<대시보드에서 발급받은 GUID> ./build-portal.sh gamedistribution"
     fi
     ;;
+  gamemonetize|gm)
+    OUT="dist-gamemonetize"; ZIP="chipchip-gamemonetize.zip"
+    GID="${GM_GAME_ID:-REPLACE_WITH_GM_GAME_ID}"
+    # GameMonetize: SDK_OPTIONS(게임ID·이벤트→__gmOnEvent 위임) + SDK 로더 주입 (GD와 동형)
+    INJECT='  <script>
+    window.SDK_OPTIONS = {
+      gameId: "'"$GID"'",
+      onEvent: function (e) { (window.__gmOnEvent || function () {})(e); }
+    };
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "https://api.gamemonetize.com/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, "script", "gamemonetize-sdk"));
+  </script>'
+    GUARD='gamemonetize-sdk'
+    if [ "$GID" = "REPLACE_WITH_GM_GAME_ID" ]; then
+      echo "⚠️  GM_GAME_ID 미설정 — 플레이스홀더로 빌드함(로컬 테스트용)."
+      echo "    제출용은: GM_GAME_ID=<대시보드에서 발급받은 GUID> ./build-portal.sh gamemonetize"
+    fi
+    ;;
   *)
-    echo "알 수 없는 포털: $PORTAL  (crazygames | gamedistribution)"; exit 1 ;;
+    echo "알 수 없는 포털: $PORTAL  (crazygames | gamedistribution | gamemonetize)"; exit 1 ;;
 esac
 
 rm -rf "$OUT" "$ZIP"
