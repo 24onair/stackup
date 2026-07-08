@@ -460,7 +460,12 @@ function prebuildTower(n) {
 }
 
 initOverlays({
-  onStart: () => { audio(); track('game_start', { source: 'title', stage: Storage.data.stage, total_runs: Storage.data.totalRuns }); wipe(() => { hideTitle(); resetRun(); }); },
+  onStart: () => {
+    audio(); track('game_start', { source: 'title', stage: Storage.data.stage, total_runs: Storage.data.totalRuns });
+    const go = () => wipe(() => { hideTitle(); resetRun(); });
+    // GameMonetize 심사 요건: 첫 Play 클릭 시 광고 1회 (GM 빌드에서만 동작, 무필 시 워치독이 진행 보장)
+    if (Ads.needsFirstPlayAd) Ads.showFirstPlayAd(go); else go();
+  },
   onRestart: () => {
     track('game_start', { source: 'restart', stage: Storage.data.stage });
     const go = () => wipe(() => { hideResult(); resetRun(); }); // 광고 먼저 → 와이프

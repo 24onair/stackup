@@ -42,6 +42,7 @@ const AFTER_REWARDED_GAP_MS = 10_000;
 const params = new URLSearchParams(location.search);
 const state = {
   disabled: params.has('noads'),
+  firstPlayAdDone: false, // GameMonetize 정책: 첫 Play 클릭 시 광고 1회 필수 (심사 요건)
   gameOvers: 0,
   gameOversSinceAd: 0,   // 마지막 인터스티셜 이후 판 수
   scheduleIdx: 0,        // INTERSTITIAL_SCHEDULE 진행 위치
@@ -193,6 +194,19 @@ export const Ads = {
 
   /** 광고 시작(오디오 뮤트) 시 main.js가 호출 — 로딩 인디케이터 숨김(실제 광고가 뜸) */
   hideAdLoading,
+
+  /** GameMonetize 심사 요건: "첫 게임 로드 후 또는 첫 Play 클릭 시 광고 노출" — GM 빌드 첫 Play에서만 true */
+  get needsFirstPlayAd() { return GM.active && !state.disabled && !state.firstPlayAdDone; },
+
+  /** 첫 Play 인터스티셜(GM 전용) — 일반 캐던스(3→2→1 스케줄)는 건드리지 않음 */
+  showFirstPlayAd(onClosed) {
+    state.firstPlayAdDone = true;
+    state.lastInterstitialAt = performance.now();
+    track('ad_impression', { format: 'interstitial', placement: 'first_play', real: true, portal: true });
+    const closed = () => { hideAdLoading(); onClosed(); };
+    showAdLoading(); // 무필이어도 어댑터 워치독(15s)이 closed 호출 → 게임 시작 보장
+    GM.showInterstitial(closed);
+  },
 
   showInterstitial(onClosed) {
     if (state.disabled) { onClosed(); return; }
