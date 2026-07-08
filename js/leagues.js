@@ -10,6 +10,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // 그 전에도 ?leagues 파라미터로 미리 켤 수 있음(QA/사전검증).
 const LEAGUES_LIVE = false;
 
+// 자동 활성은 프로덕션 호스트에서만 (analytics.js/ads.js와 동일 패턴).
+// 포털 빌드(다른 도메인 iframe)엔 리그 코드가 섞여 들어가도 항상 꺼짐 —
+// 초대 링크가 playchipchip.com으로 이탈하는 포털 ToS 리스크 원천 차단.
+// 단, 명시적 ?leagues 오버라이드는 어디서든(로컬 QA 포함) 허용.
+const PROD_HOSTS = ['playchipchip.com', 'www.playchipchip.com'];
+
 const CACHE_MS = 30_000;
 const RANGES = {
   all:  () => '1970-01-01T00:00:00Z',
@@ -37,7 +43,8 @@ async function rpc(fn, body) {
 export const Leagues = {
   get enabled() {
     if (!(SUPABASE_URL && SUPABASE_ANON_KEY)) return false;
-    return LEAGUES_LIVE || new URLSearchParams(location.search).has('leagues');
+    if (new URLSearchParams(location.search).has('leagues')) return true; // 명시적 QA 오버라이드 — 어디서든
+    return LEAGUES_LIVE && PROD_HOSTS.includes(location.hostname);         // 자동 활성은 프로덕션 호스트에서만
   },
 
   rangeSince(range) { return (RANGES[range] || RANGES.all)(); },
