@@ -99,6 +99,25 @@ print('injected', guard, 'into', path)
 PY
 fi
 
+# 캐시버스터 — 포털 CDN이 JS를 초장기 캐시(GameMonetize는 max-age 10년)하므로,
+# 업로드마다 모든 모듈 URL에 ?v=<타임스탬프>를 붙여 구버전 JS가 영원히 서빙되는 것을 방지.
+# (엔트리 main.js뿐 아니라 모듈 간 import도 전부 — 중첩 import는 쿼리가 전파되지 않기 때문)
+STAMP=$(date +%Y%m%d%H%M%S)
+python3 - "$OUT" "$STAMP" <<'PY'
+import sys, re, pathlib
+out, stamp = pathlib.Path(sys.argv[1]), sys.argv[2]
+idx = out / 'index.html'
+html = idx.read_text(encoding='utf-8')
+html, n1 = re.subn(r'src="js/main\.js"', f'src="js/main.js?v={stamp}"', html)
+idx.write_text(html, encoding='utf-8')
+total = 0
+for f in (out / 'js').glob('*.js'):
+    src = f.read_text(encoding='utf-8')
+    src, n = re.subn(r"(from\s+'\./[A-Za-z0-9_-]+\.js)'", rf"\1?v={stamp}'", src)
+    if n: f.write_text(src, encoding='utf-8'); total += n
+print(f'cache-bust v={stamp}: entry={n1}, module imports={total}')
+PY
+
 # 제출용 zip (dist 내부 기준 — 루트에 index.html이 오도록)
 ( cd "$OUT" && zip -r -q "../$ZIP" . -x "*.DS_Store" )
 
