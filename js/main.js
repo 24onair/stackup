@@ -2,7 +2,7 @@
 /* global Matter */
 import { P, createWorld, makeChipBody, onFloorContact, freezeStep, computeSupport, towerTopY, updateToppleState, angleDeviationDeg } from './physics.js';
 import { chipColor, randomStartIndex, oklchToHex } from './colors.js';
-import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe, setDoubleBtn, setReviveBtn, updateResultScore } from './ui.js';
+import { Storage, initOverlays, showTitle, hideTitle, showResult, hideResult, drawHUD, drawTapHint, drawCOMIndicator, drawChip, chipPalette, showBoard, hideBoard, setBoardTab, renderBoard, renderBoardMessage, wipe, setDoubleBtn, setReviveBtn, updateResultScore, showLeagues, hideLeagues, showLeagueBoard, hideLeagueBoard, setLeagueTab, renderLeaguesList, renderLeagueBoard, renderLeagueEvent } from './ui.js';
 import { Ads } from './ads.js';
 import { CG } from './crazygames.js';
 import { GD } from './gamedistribution.js';
@@ -10,6 +10,7 @@ import { GM } from './gamemonetize.js';
 import { Bgm } from './bgm.js';
 import { Sample } from './sfx.js';
 import { Leaderboard } from './leaderboard.js';
+import { Leagues } from './leagues.js';
 import { T, loadFonts, zoneIndex, zoneName, STAGES, stageById, stageAsset, stageLabel } from './theme.js';
 import { t, LANG, setLang } from './i18n.js';
 import { Bg } from './bg.js';
@@ -915,6 +916,195 @@ async function claimSavedNickname() {
   }
 }
 
+// ─── 사설 리그 ───────────────────────────────────────────
+let currentLeague = null;   // 현재 열린 리그의 get_my_leagues 행
+let leagueRange = 'event';
+
+// 컨테이너에 로딩 메시지 표시
+function listLoading(id) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.textContent = '';
+  const d = document.createElement('div');
+  d.className = 'board-msg';
+  d.textContent = t('board_loading');
+  box.appendChild(d);
+}
+
+// 리그 생성/참가 전 닉네임 확보 (없으면 프롬프트로 선점 — v1 폴백; 주 경로는 결과화면 등록)
+async function ensureNickname() {
+  const d = Storage.ensurePlayer();
+  if (d.nickname && d.nickClaimed) return true;
+  if (d.nickname && !d.nickClaimed) {
+    const r0 = await Leaderboard.claimNickname(d.playerId, d.playerSecret, d.nickname);
+    if (r0 === 'ok') { d.nickClaimed = true; Storage.save(); return true; }
+  }
+  let raw;
+  try { raw = window.prompt(t('need_nick_first') + ' (2~12)', d.nickname || ''); }
+  catch { raw = null; }
+  if (raw == null) return false;
+  const nick = raw.trim();
+  if (nick.length < 2 || nick.length > 12) { Bg.toast(t('nick_rule')); return false; }
+  const r = await Leaderboard.claimNickname(d.playerId, d.playerSecret, nick);
+  if (r === 'ok') { d.nickname = nick; d.nickClaimed = true; Storage.save(); return true; }
+  Bg.toast(t(r === 'taken' ? 'nick_taken' : 'league_error'));
+  return false;
+}
+
+async function openLeagues() {
+  showLeagues();
+  listLoading('leaguesList');
+  const d = Storage.data;
+  const rows = await Leagues.myLeagues(d.playerId, d.playerSecret);
+  renderLeaguesList(rows, (lg) => wipe(() => openLeagueBoard(lg)));
+}
+
+async function openLeagueBoard(lg) {
+  currentLeague = lg;
+  hideLeagues();
+  showLeagueBoard();
+  document.getElementById('leagueBoardName').textContent = lg.name;
+  document.getElementById('leagueCodeLabel').textContent = lg.code || '';
+  document.getElementById('eventForm').style.display = 'none';
+  renderLeagueEvent(lg, !!lg.is_owner);
+  await loadLeagueBoard(lg.event_title ? 'event' : 'all');
+}
+
+// 생성/참가/이벤트 이후 최신 상태로 해당 리그 재오픈 (이벤트 배너·멤버수 정확)
+async function openLeagueById(id) {
+  const d = Storage.data;
+  Leagues._flush();
+  const rows = await Leagues.myLeagues(d.playerId, d.playerSecret);
+  const lg = (rows || []).find((r) => r.league_id === id);
+  if (lg) openLeagueBoard(lg); else openLeagues();
+}
+
+async function loadLeagueBoard(range) {
+  if (!currentLeague) return;
+  leagueRange = range;
+  setLeagueTab(range);
+  listLoading('leagueList');
+  document.getElementById('leaguePodium').textContent = '';
+  document.getElementById('leagueMyRow').textContent = '';
+  const d = Storage.data;
+  const isEvent = range === 'event';
+  const rows = await Leagues.board(d.playerId, d.playerSecret, currentLeague.league_id,
+    isEvent ? 'all' : range, isEvent);
+  renderLeagueBoard(rows, d.nickname, d.playerId);
+}
+
+async function onCreateLeague() {
+  const input = document.getElementById('leagueNameInput');
+  const name = input.value.trim();
+  if (name.length < 1) { input.placeholder = t('league_invalid'); return; }
+  if (!(await ensureNickname())) return;
+  const d = Storage.data;
+  const out = await Leagues.create(d.playerId, d.playerSecret, name);
+  track('league_create', { result: out.status });
+  if (out.status === 'ok') {
+    input.value = '';
+    wipe(() => openLeagueById(out.id));
+  } else {
+    Bg.toast(t(out.status === 'limit' ? 'league_limit'
+      : out.status === 'invalid' ? 'league_invalid' : 'league_error'));
+  }
+}
+
+async function onJoinByCode(code) {
+  if (!(await ensureNickname())) return;
+  const d = Storage.data;
+  const out = await Leagues.joinByCode(d.playerId, d.playerSecret, code);
+  track('league_join', { result: out.status });
+  if (out.status === 'ok' || out.status === 'already') {
+    const ci = document.getElementById('leagueCodeInput');
+    if (ci) ci.value = '';
+    Bg.toast(t('league_joined', { name: out.name }));
+    wipe(() => openLeagueById(out.id));
+    return;
+  }
+  const msg = { full: 'league_full', notfound: 'league_notfound', limit: 'league_limit', invalid: 'league_invalid' }[out.status] || 'league_error';
+  Bg.toast(t(msg));
+}
+
+async function onInvite() {
+  if (!currentLeague) return;
+  const text = t('invite_text', { name: currentLeague.name });
+  const url = location.origin + location.pathname + '?join=' + encodeURIComponent(currentLeague.code);
+  track('invite_share', { method: navigator.share ? 'webshare' : 'clipboard' });
+  try {
+    if (navigator.share) { await navigator.share({ text, url }); return; }
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    Bg.toast(t('invite_copied'));
+  } catch { /* 취소 무시 */ }
+}
+
+async function onStartEvent() {
+  if (!currentLeague) return;
+  const ti = document.getElementById('eventTitleInput');
+  const title = ti.value.trim();
+  if (title.length < 1) { ti.placeholder = t('league_invalid'); return; }
+  const days = parseInt(document.getElementById('eventDurSelect').value, 10) || 3;
+  const endsAt = new Date(Date.now() + days * 86400000).toISOString();
+  const d = Storage.data;
+  const r = await Leagues.startEvent(d.playerId, d.playerSecret, currentLeague.league_id, title, endsAt);
+  track('event_start', { result: r });
+  if (r === 'ok') {
+    ti.value = '';
+    document.getElementById('eventForm').style.display = 'none';
+    Bg.toast(t('event_started'));
+    openLeagueById(currentLeague.league_id);
+  } else {
+    Bg.toast(t(r === 'exists' ? 'event_exists' : r === 'invalid' ? 'league_invalid' : 'league_error'));
+  }
+}
+
+async function onLeaveLeague() {
+  if (!currentLeague) return;
+  let ok = true;
+  try { ok = window.confirm(t('league_leave_confirm', { name: currentLeague.name })); } catch { /* 무시 */ }
+  if (!ok) return;
+  const d = Storage.data;
+  const r = await Leagues.leave(d.playerId, d.playerSecret, currentLeague.league_id);
+  track('league_leave', { mode: r });
+  currentLeague = null;
+  wipe(() => { hideLeagueBoard(); openLeagues(); });
+}
+
+async function handleJoinDeepLink() {
+  const code = new URLSearchParams(location.search).get('join');
+  if (!code || !Leagues.enabled) return;
+  try { history.replaceState(null, '', location.pathname); } catch { /* 무시 */ }
+  const meta = await Leagues.meta(code);
+  if (!meta) { Bg.toast(t('league_notfound')); track('league_deeplink', { result: 'notfound' }); return; }
+  let ok = true;
+  try { ok = window.confirm(t('league_join_confirm', { name: meta.name })); } catch { /* 무시 */ }
+  if (!ok) { track('league_deeplink', { result: 'declined' }); return; }
+  track('league_deeplink', { result: 'accept' });
+  onJoinByCode(code);
+}
+
+function initLeaguesUI() {
+  const btnTitle = document.getElementById('btnLeaguesTitle');
+  if (!Leagues.enabled) { if (btnTitle) btnTitle.style.display = 'none'; return; }
+  if (btnTitle) { btnTitle.style.display = ''; btnTitle.addEventListener('click', () => wipe(() => openLeagues())); }
+  document.getElementById('btnLeaguesClose')?.addEventListener('click', () => wipe(hideLeagues));
+  document.getElementById('btnLeagueBoardBack')?.addEventListener('click', () => wipe(() => { hideLeagueBoard(); openLeagues(); }));
+  document.getElementById('btnLeagueCreate')?.addEventListener('click', onCreateLeague);
+  document.getElementById('btnLeagueJoin')?.addEventListener('click', () => {
+    const code = document.getElementById('leagueCodeInput').value.trim();
+    if (code) onJoinByCode(code);
+  });
+  document.querySelectorAll('#leagueTabs .ltab').forEach((b) =>
+    b.addEventListener('click', () => loadLeagueBoard(b.dataset.lrange)));
+  document.getElementById('btnInvite')?.addEventListener('click', onInvite);
+  document.getElementById('btnStartEvent')?.addEventListener('click', () => {
+    const f = document.getElementById('eventForm');
+    f.style.display = (f.style.display === 'none' || !f.style.display) ? 'flex' : 'none';
+  });
+  document.getElementById('btnEventGo')?.addEventListener('click', onStartEvent);
+  document.getElementById('btnLeagueLeave')?.addEventListener('click', onLeaveLeague);
+}
+
 // ─── 도시(스테이지) 선택기 ───────────────────────────────
 function applyStage(id) {
   const s = stageById(id);
@@ -963,7 +1153,7 @@ btnSound?.addEventListener('click', () => {
 document.getElementById('btnLang')?.addEventListener('click', () => setLang(LANG === 'ko' ? 'en' : 'ko'));
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-05c'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-08-leagues'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 Storage.ensurePlayer();     // 랭킹 v2: 익명 정체성(id+secret) 확보
@@ -974,11 +1164,13 @@ Bg.setStage(Storage.data.stage);
 syncSoundBtn();
 initBoardUI();
 initCitySelect();
+initLeaguesUI();      // 사설 리그 — LEAGUES_LIVE=false면 버튼 숨김(?leagues로 사전 활성)
 Bg.onZoneUp = () => { // 고도 구간 전환 — 효과음 + 앰비언스 톤 변화
   Sample.play('altitude_up');
   Sample.setZone(zoneIndex(height));
 };
 showTitle();
+handleJoinDeepLink(); // ?join=CODE 초대 링크로 진입 시 참가 확인 → 리그 오픈
 // CrazyGames SDK — 포털 빌드(SDK 주입)에서만 활성.
 CG.init().then((active) => {
   if (!active) return;
@@ -1025,6 +1217,7 @@ window.__CHROMA = {
   get adDebug() { return Ads.debugState; },
   get ads() { return Ads; },
   get leaderboard() { return Leaderboard; },
+  get leagues() { return Leagues; },
   get bgm() { return { current: Bgm.current, enabled: Bgm.enabled, loaded: Object.keys(Bgm.buffers) }; },
   get sfx() { return { enabled: Sample.enabled, loaded: Object.keys(Sample.buffers), ambience: !!Sample.ambSrc, zone: Sample.zone, ctx: Sample.ctx?.state }; },
   play: (n, o) => Sample.play(n, o),

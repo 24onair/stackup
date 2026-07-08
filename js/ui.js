@@ -2,7 +2,7 @@
 import { P } from './physics.js';
 import { oklchToHex, chipColor } from './colors.js';
 import { T, chipCode, colorName } from './theme.js';
-import { t } from './i18n.js';
+import { t, LANG } from './i18n.js';
 
 // ─── localStorage ────────────────────────────────────────
 const LS_KEY = 'chromaStack.v1';
@@ -200,13 +200,21 @@ function boardRowEl(rank, r, my = false) {
   return row;
 }
 
-/** rows: [{nickname, score, height, player_id?}] — 포디움(1–3위) + 리스트(4위~) + 내 순위 고정.
+/** 포디움(1–3위) + 리스트(4위~) + 내 순위 고정 을 지정 컨테이너에 렌더 (전역/리그 공용).
+ *  els: {podium, list, myRow} DOM 엘리먼트.
+ *  rows: [{nickname, score, height, player_id?}]
  *  myFallback: 탑100 밖일 때 하단 고정에 쓸 {score, height} (전체 탭 한정, 순위 '100+')
  *  myPlayerId: 내 순위 매칭 우선 키(랭킹 v2) — 동명이인 오매칭 방지. 레거시 행은 닉네임 폴백. */
-export function renderBoard(rows, myNickname, myFallback = null, myPlayerId = '') {
-  const podium = $('podium'), list = $('boardList'), myRow = $('myRow');
+export function renderRankingInto(els, rows, myNickname, myFallback = null, myPlayerId = '') {
+  const { podium, list, myRow } = els;
   podium.textContent = ''; list.textContent = ''; myRow.textContent = '';
-  if (!rows || rows.length === 0) { renderBoardMessage(rows ? t('board_empty') : t('board_error')); return; }
+  if (!rows || rows.length === 0) {
+    const div = document.createElement('div');
+    div.className = 'board-msg';
+    div.textContent = rows ? t('board_empty') : t('board_error');
+    list.appendChild(div);
+    return;
+  }
 
   // 포디움: 배치 순서 2-1-3, 칩 높이 = 순위 (가이드: 겨자/청록/벽돌)
   const spec = [
@@ -250,6 +258,97 @@ export function renderBoard(rows, myNickname, myFallback = null, myPlayerId = ''
     if (idx >= 0) myRow.appendChild(boardRowEl(idx + 1, rows[idx], true));
     else if (myFallback) myRow.appendChild(boardRowEl('100+', { nickname: myNickname, ...myFallback }, true));
   }
+}
+
+/** 전역 랭킹 렌더 (기존 시그니처 유지 — #board 컨테이너 대상) */
+export function renderBoard(rows, myNickname, myFallback = null, myPlayerId = '') {
+  renderRankingInto({ podium: $('podium'), list: $('boardList'), myRow: $('myRow') },
+    rows, myNickname, myFallback, myPlayerId);
+}
+
+// ─── 리그 오버레이 ───────────────────────────────────────
+export function showLeagues()     { $('leagues').style.display = 'flex'; document.body.classList.add('board-open'); }
+export function hideLeagues()      { $('leagues').style.display = 'none'; document.body.classList.remove('board-open'); }
+export function showLeagueBoard()  { $('leagueBoard').style.display = 'flex'; document.body.classList.add('board-open'); }
+export function hideLeagueBoard()  { $('leagueBoard').style.display = 'none'; document.body.classList.remove('board-open'); }
+
+export function setLeagueTab(range) {
+  document.querySelectorAll('#leagueTabs .ltab').forEach((b) =>
+    b.classList.toggle('active', b.dataset.lrange === range));
+}
+
+/** 리그 순위판 렌더 (#leagueBoard 컨테이너 대상, renderRankingInto 재사용) */
+export function renderLeagueBoard(rows, myNickname, myPlayerId = '') {
+  renderRankingInto({ podium: $('leaguePodium'), list: $('leagueList'), myRow: $('leagueMyRow') },
+    rows, myNickname, null, myPlayerId);
+}
+
+// 마감까지 남은 시간 — 브라우저 로케일 상대 표기("3일 후"/"in 3 days")
+function remainText(endsAtISO) {
+  try {
+    const ms = new Date(endsAtISO).getTime() - Date.now();
+    const rtf = new Intl.RelativeTimeFormat(LANG, { numeric: 'auto' });
+    const abs = Math.abs(ms), DAY = 86400000, HR = 3600000, MIN = 60000;
+    if (abs >= DAY) return rtf.format(Math.round(ms / DAY), 'day');
+    if (abs >= HR)  return rtf.format(Math.round(ms / HR), 'hour');
+    return rtf.format(Math.round(ms / MIN), 'minute');
+  } catch { return ''; }
+}
+
+// 리그 카드/배너 공용 이벤트 요약 텍스트
+function eventSummaryText(lg) {
+  if (lg.event_frozen) {
+    return '🏁 ' + lg.event_title + ' · ' +
+      (lg.event_leader_nick ? t('event_winner', { nick: lg.event_leader_nick }) : t('event_none'));
+  }
+  const lead = lg.event_leader_nick ? ` · 🥇 ${lg.event_leader_nick}` : '';
+  return '🔥 ' + lg.event_title + ' · ' + remainText(lg.event_ends_at) + lead;
+}
+
+/** 내 리그 목록 렌더. leagues: get_my_leagues 결과(또는 null). onOpen(lg) 콜백으로 상세 진입. */
+export function renderLeaguesList(leagues, onOpen) {
+  const box = $('leaguesList');
+  box.textContent = '';
+  if (!leagues) {
+    const d = document.createElement('div'); d.className = 'board-msg';
+    d.textContent = t('board_error'); box.appendChild(d); return;
+  }
+  if (leagues.length === 0) {
+    const d = document.createElement('div'); d.className = 'board-msg';
+    d.textContent = t('no_leagues'); box.appendChild(d); return;
+  }
+  for (const lg of leagues) {
+    const card = document.createElement('button');
+    card.className = 'league-card';
+    const top = document.createElement('div'); top.className = 'lc-top';
+    const nm = document.createElement('span'); nm.className = 'lc-name'; nm.textContent = lg.name;
+    top.appendChild(nm);
+    if (lg.is_owner) {
+      const b = document.createElement('span'); b.className = 'lc-owner';
+      b.textContent = t('owner_badge'); top.appendChild(b);
+    }
+    const meta = document.createElement('div'); meta.className = 'lc-meta';
+    meta.textContent = t('member_count', { n: lg.member_count }) + ' · ' +
+      (lg.my_rank ? t('my_rank', { r: lg.my_rank }) : t('my_rank_none'));
+    card.appendChild(top); card.appendChild(meta);
+    if (lg.event_title) {
+      const ev = document.createElement('div'); ev.className = 'lc-event';
+      ev.textContent = eventSummaryText(lg);
+      card.appendChild(ev);
+    }
+    card.addEventListener('click', () => onOpen(lg));
+    box.appendChild(card);
+  }
+}
+
+/** 상세 화면 이벤트 배너 + 소유자 '이벤트 시작' 버튼 토글.
+ *  lg: 해당 리그의 get_my_leagues 행. isOwner: 소유 여부. */
+export function renderLeagueEvent(lg, isOwner) {
+  const info = $('leagueEventInfo');
+  const btn = $('btnStartEvent');
+  const hasLive = !!(lg && lg.event_title && !lg.event_frozen);
+  if (info) info.textContent = (lg && lg.event_title) ? eventSummaryText(lg) : t('event_none');
+  if (btn) btn.style.display = (isOwner && !hasLive) ? '' : 'none';
 }
 
 // ─── 캔버스 HUD (칩칩 가이드: 스티커 칩 스타일) ──────────

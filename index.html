@@ -260,6 +260,76 @@
     100% { transform: none; }
   }
 
+  /* ── 리그 화면 ── */
+  #leagues, #leagueBoard { justify-content: flex-start; padding: 5% 6% 4%; gap: 12px; }
+  #leaguesList, #leagueList { width: 100%; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  #leaguePodium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; min-height: 0; }
+  #leaguePodium:empty { display: none; }
+  #leagueMyRow { width: 100%; }
+  #leagueMyRow .board-row { border: 3px solid #E4572E; box-shadow: 4px 4px 0 #33261A; padding: 12px 14px; }
+  #leagueMyRow .rank { color: #E4572E; }
+  #leagueMyRow:empty { display: none; }
+
+  /* 리그 카드 */
+  .league-card {
+    width: 100%; text-align: left; background: #FBF4E6; border: 2px solid #33261A;
+    box-shadow: 3px 3px 0 #33261A; border-radius: 0; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 5px; cursor: pointer;
+  }
+  .league-card:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #33261A; }
+  .lc-top { display: flex; align-items: center; gap: 8px; }
+  .lc-name { font-family: 'Jua', sans-serif; font-size: 17px; color: #33261A; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lc-owner { font-family: 'Jua', sans-serif; font-size: 11px; color: #FBF4E6; background: #2F8F83; padding: 2px 7px; flex-shrink: 0; }
+  .lc-meta { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b5947; }
+  .lc-event { font-family: 'Jua', sans-serif; font-size: 12.5px; color: #55452F; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* 생성/참가 폼 */
+  .league-forms { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .lf-row { display: flex; gap: 8px; }
+  .lf-row input {
+    font-family: 'Jua', sans-serif; font-size: 15px; flex: 1 1 auto; min-width: 0;
+    padding: 11px 14px; border: 2px solid #33261A; border-radius: 0;
+    background: #FBF4E6; color: #33261A; outline: none;
+  }
+  #leagueCodeInput { text-transform: uppercase; letter-spacing: 2px; font-family: 'IBM Plex Mono', monospace; }
+  .lf-row button { font-size: 15px; padding: 11px 16px; background: #EDAA3C; box-shadow: 3px 3px 0 #33261A; flex-shrink: 0; }
+
+  /* 초대 코드 행 */
+  .league-code-row { display: flex; align-items: center; gap: 10px; width: 100%; background: #FBF4E6; border: 2px solid #33261A; padding: 8px 12px; }
+  .lcr-label { font-family: 'Jua', sans-serif; font-size: 13px; color: #6b5947; flex-shrink: 0; }
+  #leagueCodeLabel { font-family: 'IBM Plex Mono', monospace; font-size: 20px; letter-spacing: 3px; color: #33261A; flex: 1; }
+  .league-code-row #btnInvite { font-size: 13px; padding: 8px 14px; flex-shrink: 0; }
+
+  /* 이벤트 배너 */
+  #leagueEvent { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  #leagueEventInfo { font-family: 'Jua', sans-serif; font-size: 14px; color: #33261A; background: #FBF4E6; border: 2px dashed #33261A; padding: 10px 12px; text-align: center; }
+  #eventForm { display: flex; flex-direction: column; gap: 8px; }
+  #eventForm input, #eventForm select {
+    font-family: 'Jua', sans-serif; font-size: 15px; padding: 10px 12px;
+    border: 2px solid #33261A; border-radius: 0; background: #FBF4E6; color: #33261A; outline: none;
+  }
+  .ef-row { display: flex; gap: 8px; }
+  .ef-row select { flex-shrink: 0; }
+  .ef-row button { flex: 1; font-size: 15px; padding: 10px 14px; background: #E4572E; color: #FBF4E6; box-shadow: 3px 3px 0 #33261A; }
+  #btnStartEvent { width: 100%; font-size: 15px; padding: 11px 0; background: #E4572E; color: #FBF4E6; box-shadow: 3px 3px 0 #33261A; }
+
+  /* 리그 탭 */
+  #leagueTabs { display: flex; width: 100%; border: 2px solid #33261A; background: #FBF4E6; }
+  #leagueTabs .ltab {
+    flex: 1; padding: 9px 0; border: none; border-radius: 0; box-shadow: none;
+    font-family: 'Jua', sans-serif; font-size: 14px; background: #FBF4E6; color: #33261A;
+  }
+  #leagueTabs .ltab + .ltab { border-left: 2px solid #33261A; }
+  #leagueTabs .ltab.active { background: #E4572E; color: #FBF4E6; }
+  #leagueTabs .ltab:active { transform: none; }
+  #btnLeagueLeave { width: 100%; font-size: 13px; padding: 9px 0; }
+
+  #btnLeaguesClose, #btnLeagueBoardBack {
+    width: 44px; height: 44px; padding: 0;
+    font-family: 'Rammetto One', cursive; font-size: 17px;
+    border-width: 2px; box-shadow: 3px 3px 0 #33261A;
+  }
+
   /* ── 화면 전환: 5색 칩 띠 와이프 (아래→위) ── */
   #wipe {
     position: absolute; inset: 0; z-index: 40; pointer-events: none;
@@ -345,6 +415,7 @@
       <div id="citySelect"></div>
       <button id="btnStart" class="btn-big" data-i18n="play">쌓아 볼까?</button>
       <button id="btnBoardTitle" class="btn-teal" data-i18n="ranking">🏆 랭킹</button>
+      <button id="btnLeaguesTitle" class="btn-teal" data-i18n="leagues" style="display:none">🏘️ 리그</button>
       <div class="title-foot">
         <p class="blurb" data-i18n="home_blurb">한 번의 터치로 컬러 칩을 쌓는 실물리 스태킹 게임. 서울·문경·파리·도쿄 등 8개 도시의 스카이라인을 성층권까지 등반하세요. 무료 · 설치 불필요.</p>
         <nav class="title-links">
@@ -403,6 +474,65 @@
       <div id="podium"></div>
       <div id="boardList"></div>
       <div id="myRow"></div>
+    </div>
+
+    <!-- 리그 목록 -->
+    <div id="leagues" class="overlay">
+      <div class="board-head">
+        <button id="btnLeaguesClose">&lt;</button>
+        <h2 data-i18n="leagues_title">리그</h2>
+        <div class="board-spacer"></div>
+      </div>
+      <div id="leaguesList"></div>
+      <div class="league-forms">
+        <div class="lf-row">
+          <input id="leagueNameInput" maxlength="24" data-i18n-ph="league_name_ph" placeholder="리그 이름" autocomplete="off">
+          <button id="btnLeagueCreate" data-i18n="league_create_do">만들기</button>
+        </div>
+        <div class="lf-row">
+          <input id="leagueCodeInput" maxlength="6" data-i18n-ph="league_code_ph" placeholder="초대 코드 6자" autocomplete="off" autocapitalize="characters">
+          <button id="btnLeagueJoin" data-i18n="league_join_do">참가</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 리그 상세 순위판 -->
+    <div id="leagueBoard" class="overlay">
+      <div class="board-head">
+        <button id="btnLeagueBoardBack">&lt;</button>
+        <h2 id="leagueBoardName">리그</h2>
+        <div class="board-spacer"></div>
+      </div>
+      <div class="league-code-row">
+        <span class="lcr-label" data-i18n="code_label">초대 코드</span>
+        <b id="leagueCodeLabel">------</b>
+        <button id="btnInvite" class="btn-teal" data-i18n="invite">초대</button>
+      </div>
+      <div id="leagueEvent">
+        <div id="leagueEventInfo"></div>
+        <div id="eventForm" style="display:none">
+          <input id="eventTitleInput" maxlength="40" data-i18n-ph="event_title_ph" placeholder="이벤트 제목" autocomplete="off">
+          <div class="ef-row">
+            <select id="eventDurSelect">
+              <option value="1" data-i18n="event_dur_1d">1일</option>
+              <option value="3" selected data-i18n="event_dur_3d">3일</option>
+              <option value="7" data-i18n="event_dur_7d">7일</option>
+            </select>
+            <button id="btnEventGo" data-i18n="event_start">🎯 이벤트 시작</button>
+          </div>
+        </div>
+        <button id="btnStartEvent" data-i18n="event_start" style="display:none">🎯 이벤트 시작</button>
+      </div>
+      <div id="leagueTabs">
+        <button class="ltab active" data-lrange="event" data-i18n="event_tab">이벤트</button>
+        <button class="ltab" data-lrange="day" data-i18n="today">오늘</button>
+        <button class="ltab" data-lrange="week" data-i18n="week">주간</button>
+        <button class="ltab" data-lrange="all" data-i18n="all">전체</button>
+      </div>
+      <div id="leaguePodium"></div>
+      <div id="leagueList"></div>
+      <div id="leagueMyRow"></div>
+      <button id="btnLeagueLeave" class="btn-mustard" data-i18n="league_leave">리그 나가기</button>
     </div>
 
     <!-- 화면 전환 와이프 -->
