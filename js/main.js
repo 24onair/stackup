@@ -1153,7 +1153,7 @@ btnSound?.addEventListener('click', () => {
 document.getElementById('btnLang')?.addEventListener('click', () => setLang(LANG === 'ko' ? 'en' : 'ko'));
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-08-leagues'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-08-leagues-live'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 Storage.ensurePlayer();     // 랭킹 v2: 익명 정체성(id+secret) 확보

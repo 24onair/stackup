@@ -8,7 +8,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // ── 런칭 스위치 ──────────────────────────────────────────────
 // 승인/검증 후 true 로 바꾸면 타이틀에 '🏘️ 리그' 버튼 노출.
 // 그 전에도 ?leagues 파라미터로 미리 켤 수 있음(QA/사전검증).
-const LEAGUES_LIVE = false;
+const LEAGUES_LIVE = true;
 
 // 자동 활성은 프로덕션 호스트에서만 (analytics.js/ads.js와 동일 패턴).
 // 포털 빌드(다른 도메인 iframe)엔 리그 코드가 섞여 들어가도 항상 꺼짐 —
