@@ -368,6 +368,9 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+-- OUT 파라미터(nickname/score/height/player_id)가 서브쿼리 컬럼과 이름이 겹치므로
+-- 모호할 땐 컬럼을 우선 (return query는 위치 기반 매핑이라 안전)
+#variable_conflict use_column
 declare
   v_nick text;
   v_ev   public.league_events%rowtype;
