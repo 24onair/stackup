@@ -38,6 +38,21 @@ const preloadReward = () => safe(() => {
   if (s.preloadAd) return s.preloadAd('rewarded').catch(() => {});
 });
 
+// ⚠️ GameMonetize에는 리워드(rewarded) 포맷이 없다 — showBanner() 하나뿐이고 SDK에 rewarded
+//    개념 자체가 없어 "끝까지 봤는지"를 검증할 수 없다. 게다가 두 번째 광고는 빈도제한으로
+//    무필(이벤트 0개)이 잦다. 그래서 GM 리워드는 업계 표준(무필 시 지급)대로 "광고 요청 후
+//    흐름이 끝나면 무조건 보상" — 광고가 떴으면 보고 나서, 무필이면 그냥. 사용자를 벌하지 않고
+//    이어하기/점수2배가 항상 동작하게 한다(수익은 실제 뜬 광고에서 발생). CG·GD는 진짜 리워드라
+//    완주 검증 유지(이 파일과 무관).
+function grantPendingReward() {
+  if (_pendingReward && !_pendingReward.settled) {
+    _pendingReward.settled = true;
+    const p = _pendingReward; _pendingReward = null;
+    safe(() => p.onReward());
+    preloadReward();
+  }
+}
+
 export const GM = {
   get active() { return _active; },
 
@@ -54,42 +69,22 @@ export const GM = {
           if (_pendingReward) _pendingReward.started = true;
           _interStarted = true;
           break;
-        // ⚠️ GameMonetize는 GD의 SDK_REWARDED_WATCH_COMPLETE를 쓰지 않고 IMA/VAST 이벤트를
-        //    낸다. 광고 완주 신호는 'COMPLETE'(모든 quartile 통과 후). 이게 리워드의 권위 신호.
-        //    (SDK_REWARDED_WATCH_COMPLETE도 혹시 모를 변형 대비해 함께 처리)
+        // 비디오형 광고 완주(모든 quartile 통과) → 보상. (GD의 SDK_REWARDED_WATCH_COMPLETE도 호환)
         case 'COMPLETE':
         case 'SDK_REWARDED_WATCH_COMPLETE':
-          if (_pendingReward && !_pendingReward.settled) {
-            _pendingReward.settled = true;
-            const p = _pendingReward; _pendingReward = null;
-            safe(() => p.onReward());
-            preloadReward();
-          }
+          grantPendingReward();
           break;
-        case 'SDK_GAME_START': // 광고 종료(또는 초기 준비) → 언뮤트 + 대기 흐름 복귀
+        case 'SDK_GAME_START': // 광고 종료(비디오/디스플레이 무관) 또는 초기 준비 → 언뮤트 + 흐름 복귀
           safe(() => _unmute && _unmute());
           if (_pendingInterstitial) { const done = _pendingInterstitial; _pendingInterstitial = null; safe(done); }
-          // ⚠️ GameMonetize에는 리워드 포맷이 없다(SDK에 rewarded 개념 자체가 없음).
-          // showBanner()가 비디오형이면 COMPLETE가 오지만, 디스플레이형 전면광고는
-          // COMPLETE 없이 닫혀 SDK_GAME_START만 온다. 그래서 "광고가 실제로 표시됨
-          // (started)"이 GM에서 신뢰 가능한 유일한 보상 기준 — 표시됐으면 보상 지급.
-          // (무필로 시작도 안 했으면 started=false → 보상 없이 종료.)
-          if (_pendingReward && !_pendingReward.settled) {
-            const p = _pendingReward;
-            if (p.started) {
-              p.settled = true; _pendingReward = null;
-              safe(() => p.onReward());
-              preloadReward();
-            } else {
-              safe(() => p.end());
-            }
-          }
+          grantPendingReward(); // 광고가 떴다가 닫힘 → 보상(디스플레이형은 COMPLETE가 없음)
           break;
         default:
-          // 광고 에러/무필/스로틀(*ERROR*) — 대기 중이면 즉시 흐름 복귀(120s 대기 방지)
+          // 광고 에러/무필/스로틀(*ERROR*) — 광고가 안 떴어도 대기 리워드는 지급(GM 무필 정책),
+          // 인터스티셜은 흐름 복귀.
           if (typeof name === 'string' && /ERROR/i.test(name)) {
             if (_pendingInterstitial) { const done = _pendingInterstitial; _pendingInterstitial = null; safe(done); }
-            if (_pendingReward && !_pendingReward.settled) safe(() => _pendingReward.end());
+            grantPendingReward();
           }
           break;
       }
@@ -121,25 +116,20 @@ export const GM = {
     } catch { finish(); }
   },
 
-  /** 리워드 — 완주(COMPLETE)에만 보상, 스킵/실패/무필/스로틀은 onDismiss */
-  showRewarded(onReward, onDismiss) {
+  /** 리워드 — 광고 요청 후 종료(또는 무필) 시 보상 지급. onDismiss는 GM에선 미사용(항상 지급). */
+  showRewarded(onReward, onDismiss) { // eslint-disable-line no-unused-vars
     if (!_active || !sdk()) { onReward(); return; } // ads.js가 _active일 때만 호출
-    const p = { onReward, onDismiss, settled: false, started: false };
-    // 완주 없이 광고가 끝났을 때(스킵/에러/무필) — 보상 없이 종료
-    p.end = () => {
-      if (!p.settled) { p.settled = true; safe(() => onDismiss && onDismiss()); }
-      if (_pendingReward === p) _pendingReward = null;
-      preloadReward();
-    };
+    const p = { onReward, settled: false, started: false };
     _pendingReward = p;
-    // 시작 워치독 — 광고가 제때 시작 안 되면(무필/스로틀: 예) 이어하기 직후 더블스코어)
-    // 보상 없이 즉시 복귀 → 버튼이 8s만에 복원됨(기존 120s 방치 대신).
-    setTimeout(() => { if (_pendingReward === p && !p.settled && !p.started) safe(() => p.end()); }, AD_START_MS);
-    // 최종 안전망 — 정상 완주(≤30s 광고)를 자르지 않도록 넉넉히.
-    setTimeout(() => safe(() => p.end()), AD_MAX_MS);
+    // 무필 워치독 — 광고가 AD_START_MS 안에 시작(SDK_GAME_PAUSE)조차 안 되면 무필로 보고 보상.
+    //   (광고가 이미 시작됐으면 started=true → 여기서 안 끊고 종료 이벤트/COMPLETE를 기다림.)
+    //   AD_START_MS(15s)는 실측 광고 시작지연(~10s)보다 커서 정상 광고를 조기 지급하지 않음.
+    setTimeout(() => { if (_pendingReward === p && !p.started) grantPendingReward(); }, AD_START_MS);
+    // 최종 안전망 — 광고가 떴는데 종료 신호가 끝내 안 와도 보상(먹통 방지).
+    setTimeout(() => { if (_pendingReward === p) grantPendingReward(); }, AD_MAX_MS);
     try {
       const ad = safe(() => sdk().showBanner()); // GameMonetize: 광고 메서드는 showBanner() 하나뿐
-      if (ad && ad.then) ad.then(() => safe(() => p.end())).catch(() => safe(() => p.end()));
-    } catch { p.end(); }
+      if (ad && ad.then) ad.catch(() => grantPendingReward()); // 프로미스 변형이 즉시 실패하면 보상
+    } catch { grantPendingReward(); }
   },
 };
