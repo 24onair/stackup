@@ -69,8 +69,21 @@ export const GM = {
         case 'SDK_GAME_START': // 광고 종료(또는 초기 준비) → 언뮤트 + 대기 흐름 복귀
           safe(() => _unmute && _unmute());
           if (_pendingInterstitial) { const done = _pendingInterstitial; _pendingInterstitial = null; safe(done); }
-          // COMPLETE 없이 재개됐으면(스킵/무필/중도이탈) 보상 없이 종료
-          if (_pendingReward && !_pendingReward.settled) safe(() => _pendingReward.end());
+          // ⚠️ GameMonetize에는 리워드 포맷이 없다(SDK에 rewarded 개념 자체가 없음).
+          // showBanner()가 비디오형이면 COMPLETE가 오지만, 디스플레이형 전면광고는
+          // COMPLETE 없이 닫혀 SDK_GAME_START만 온다. 그래서 "광고가 실제로 표시됨
+          // (started)"이 GM에서 신뢰 가능한 유일한 보상 기준 — 표시됐으면 보상 지급.
+          // (무필로 시작도 안 했으면 started=false → 보상 없이 종료.)
+          if (_pendingReward && !_pendingReward.settled) {
+            const p = _pendingReward;
+            if (p.started) {
+              p.settled = true; _pendingReward = null;
+              safe(() => p.onReward());
+              preloadReward();
+            } else {
+              safe(() => p.end());
+            }
+          }
           break;
         default:
           // 광고 에러/무필/스로틀(*ERROR*) — 대기 중이면 즉시 흐름 복귀(120s 대기 방지)
