@@ -1085,8 +1085,14 @@ async function handleJoinDeepLink() {
 
 function initLeaguesUI() {
   const btnTitle = document.getElementById('btnLeaguesTitle');
-  if (!Leagues.enabled) { if (btnTitle) btnTitle.style.display = 'none'; return; }
+  const btnResult = document.getElementById('btnLeaguesResult');
+  if (!Leagues.enabled) { // 키/플래그 미충족 → 리그 진입점 전부 숨김
+    if (btnTitle) btnTitle.style.display = 'none';
+    if (btnResult) btnResult.style.display = 'none';
+    return;
+  }
   if (btnTitle) { btnTitle.style.display = ''; btnTitle.addEventListener('click', () => wipe(() => openLeagues())); }
+  if (btnResult) { btnResult.style.display = ''; btnResult.addEventListener('click', () => wipe(() => openLeagues())); } // 결과 화면 → 바로 리그로
   document.getElementById('btnLeaguesClose')?.addEventListener('click', () => wipe(hideLeagues));
   document.getElementById('btnLeagueBoardBack')?.addEventListener('click', () => wipe(() => { hideLeagueBoard(); openLeagues(); }));
   document.getElementById('btnLeagueCreate')?.addEventListener('click', onCreateLeague);
@@ -1153,7 +1159,7 @@ btnSound?.addEventListener('click', () => {
 document.getElementById('btnLang')?.addEventListener('click', () => setLang(LANG === 'ko' ? 'en' : 'ko'));
 
 // ─── 부팅 ────────────────────────────────────────────────
-const BUILD = 'chipchip-2026-07-08-leagues-live'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
+const BUILD = 'chipchip-2026-07-08-leagues-result-entry'; // 배포마다 갱신 — 사용자 캐시 버전 판별용
 console.info(`CHIP! CHIP! 칩칩! build: ${BUILD}`);
 Storage.load();
 Storage.ensurePlayer();     // 랭킹 v2: 익명 정체성(id+secret) 확보
