@@ -75,5 +75,15 @@ forgives.
 - 랭킹은 프로덕션과 **같은 Supabase 보드 공유**(글로벌 통합, 의도됨).
 - 로컬에서 gameId 없이(플레이스홀더) 빌드하면 리워드 광고가 안 떠 이어하기가 dismiss된다 — 정상. 실 gameId + 리워드 플래그 필요.
 
+## ⚠️ 1차 거절 → 수정 (2026-07-23, 커밋 c1bfd26)
+GD 테스터 피드백 2가지 — 둘 다 해소:
+1. **Preroll 필수**: "Play 클릭 즉시 광고 호출." → 첫 Play 광고(`needsFirstPlayAd`/`showFirstPlayAd`)를
+   GM 전용에서 **GD·GM 공통으로 일반화**. GD 빌드도 이제 첫 Play에서 `gdsdk.showAd()`(preroll) 호출.
+2. **Midroll 필수**: "Replay/Next/Menu 같은 비플레이 버튼에 세션 사이 광고." → 애그리게이터 빌드는
+   `canShowInterstitial()`이 **매 Replay마다 true**(리워드 직후 10s만 제외). 실제 노출 빈도는 GD SDK가
+   자체 캡하므로 매판 호출이 정답(우리 3→2→1 스케줄은 자체 도메인 AdSense 전용으로 분리).
+> ⚠️ GD 정책: 피드백은 **2회**만. 3번째 제출에서 변경 없으면 삭제. → 이 수정본으로 2번째 제출.
+> 재업로드 후 반드시 **"complete revision" 버튼** 클릭.
+
 ## 재빌드 시점
 `js/*` 또는 `index.html` 변경 후 제출본 갱신: `GD_GAME_ID=<GUID> ./build-portal.sh gamedistribution` 재실행 → 새 zip 업로드.
