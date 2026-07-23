@@ -188,24 +188,30 @@ export const Ads = {
 
   canShowInterstitial() {
     if (state.disabled) return false;
-    return state.gameOversSinceAd >= currentInterval()
-      && performance.now() - state.lastRewardedAt >= AFTER_REWARDED_GAP_MS; // 리워드 직후 제외
+    const afterReward = performance.now() - state.lastRewardedAt >= AFTER_REWARDED_GAP_MS; // 리워드 직후 제외
+    // 애그리게이터(CG·GD·GM): midroll을 매 Replay/Menu 전환에서 호출 — 실제 노출 빈도는
+    //   포털 SDK가 자체 캡. GD 심사 요건("midroll on Replay/Next/Menu")을 충족하려면 매판 호출해야 함.
+    if (CG.active || GD.active || GM.active) return afterReward;
+    // 자체 도메인 AdSense: 우리 스케줄(3→2→1)로 직접 빈도 제어.
+    return state.gameOversSinceAd >= currentInterval() && afterReward;
   },
 
   /** 광고 시작(오디오 뮤트) 시 main.js가 호출 — 로딩 인디케이터 숨김(실제 광고가 뜸) */
   hideAdLoading,
 
-  /** GameMonetize 심사 요건: "첫 게임 로드 후 또는 첫 Play 클릭 시 광고 노출" — GM 빌드 첫 Play에서만 true */
-  get needsFirstPlayAd() { return GM.active && !state.disabled && !state.firstPlayAdDone; },
+  /** 애그리게이터 심사 요건(GD·GM): "게임 로드 후/첫 Play 클릭 시 광고(preroll)" — 첫 Play에서만 true.
+   *  (CrazyGames는 첫 로드 preroll을 권장하지 않아 제외 — CG는 midgame 광고 모델.) */
+  get needsFirstPlayAd() { return (GD.active || GM.active) && !state.disabled && !state.firstPlayAdDone; },
 
-  /** 첫 Play 인터스티셜(GM 전용) — 일반 캐던스(3→2→1 스케줄)는 건드리지 않음 */
+  /** 첫 Play preroll(GD·GM) — 활성 포털로 라우팅. 일반 캐던스(3→2→1 스케줄)는 건드리지 않음 */
   showFirstPlayAd(onClosed) {
     state.firstPlayAdDone = true;
     state.lastInterstitialAt = performance.now();
     track('ad_impression', { format: 'interstitial', placement: 'first_play', real: true, portal: true });
     const closed = () => { hideAdLoading(); onClosed(); };
-    showAdLoading(); // 무필이어도 어댑터 워치독(15s)이 closed 호출 → 게임 시작 보장
-    GM.showInterstitial(closed);
+    showAdLoading(); // 광고 로드 지연 표시(무필/에러여도 어댑터가 closed 호출 → 게임 시작 보장)
+    if (GD.active) { GD.showInterstitial(closed); return; } // GameDistribution: showAd() = preroll
+    GM.showInterstitial(closed);                            // GameMonetize: showBanner() = preroll
   },
 
   showInterstitial(onClosed) {

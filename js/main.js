@@ -464,7 +464,7 @@ initOverlays({
   onStart: () => {
     audio(); track('game_start', { source: 'title', stage: Storage.data.stage, total_runs: Storage.data.totalRuns });
     const go = () => wipe(() => { hideTitle(); resetRun(); });
-    // GameMonetize 심사 요건: 첫 Play 클릭 시 광고 1회 (GM 빌드에서만 동작, 무필 시 워치독이 진행 보장)
+    // 애그리게이터 심사 요건(GD·GM): 첫 Play 클릭 시 preroll 광고 1회 (포털 빌드에서만, 무필/에러여도 진행 보장)
     if (Ads.needsFirstPlayAd) Ads.showFirstPlayAd(go); else go();
   },
   onRestart: () => {
